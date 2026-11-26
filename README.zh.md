@@ -2,7 +2,7 @@
 
 这是 [Ink-bai5844 原插件](https://github.com/Ink-bai5844/dsh-liquid-glass-fluid-background) 的维护分支，保留原作者署名与 MIT 许可，由 **gtggdd4mzb-source** 维护。[English](README.md)
 
-**0.3.0** 面向 **DSH 0.2.2-rc.5 桌面端和 Web 端**：提供半透明玻璃表面与 CSS 渐变流体背景，两个效果可以分别开启。渐变背景不是 WebGL 流体模拟，也不包含光学折射。
+**0.3.1** 面向 **DSH 0.2.2-rc.5 桌面端和 Web 端**：提供半透明玻璃表面与 CSS 渐变流体背景，两个效果可以分别开启。渐变背景不是 WebGL 流体模拟，也不包含光学折射。
 
 ![DSH 0.2.2-rc.5 实际运行效果](assets/dsh-home.png)
 ![DSH 中的设置面板](assets/dsh-settings.png)
@@ -14,7 +14,7 @@
 请使用当前桌面端附带的 DSH 命令行，避免误用单独安装的旧 CLI：
 
 ```sh
-dsh plugin --profile desktop add https://github.com/gtggdd4mzb-source/dsh-liquid-glass-fluid-background/releases/download/v0.3.0/dsh-liquid-glass-fluid-background-0.3.0.tgz
+dsh plugin --profile desktop add https://github.com/gtggdd4mzb-source/dsh-liquid-glass-fluid-background/releases/download/v0.3.1/dsh-liquid-glass-fluid-background-0.3.1.tgz
 ```
 
 Web 端把 `desktop` 改为 `web`。首次安装后完全退出并重启 DSH，在右下方打开“液态玻璃”。

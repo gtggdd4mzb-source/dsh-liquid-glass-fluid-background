@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.1 — 2026-11-26
+
+- Fix the native Windows dark-theme center panel covering the gradient. The backdrop's base token now overrides later host theme sheets and inline tokens only while enabled.
+- Add a regression exercising late dark styles, inline tokens, and restoration on disabling the background.
+- Set explicit palette option colors for the native Windows dark-mode dropdown.
+- Upgrade and inspect the user's actual native Windows Desktop, including light/dark presentation.
+
 ## 0.3.0 — 2026-11-26
 
 - Rebuild package metadata and committed browser artifacts for DSH 0.2.2-rc.5.

@@ -2,7 +2,7 @@
 
 A maintained compatibility fork of [Ink-bai5844/dsh-liquid-glass-fluid-background](https://github.com/Ink-bai5844/dsh-liquid-glass-fluid-background), with the original MIT license preserved. Maintained by **gtggdd4mzb-source**. [中文说明](README.zh.md)
 
-Version **0.3.0** targets **DeepSeek Harness 0.2.2-rc.5** (Desktop and Web). It adds translucent surfaces and a CSS gradient background, with separate switches for each. It does not implement optical refraction or a WebGL fluid simulation.
+Version **0.3.1** targets **DeepSeek Harness 0.2.2-rc.5** (Desktop and Web). It adds translucent surfaces and a CSS gradient background, with separate switches for each. It does not implement optical refraction or a WebGL fluid simulation.
 
 ![DSH 0.2.2-rc.5 running the skin](assets/dsh-home.png)
 ![Settings on the real DSH frontend](assets/dsh-settings.png)
@@ -14,7 +14,7 @@ These screenshots show the actual DSH 0.2.2-rc.5 Web frontend started from the i
 Use the CLI bundled with your current Harness, rather than a separately installed older CLI. With that CLI on your PATH:
 
 ```sh
-dsh plugin --profile desktop add https://github.com/gtggdd4mzb-source/dsh-liquid-glass-fluid-background/releases/download/v0.3.0/dsh-liquid-glass-fluid-background-0.3.0.tgz
+dsh plugin --profile desktop add https://github.com/gtggdd4mzb-source/dsh-liquid-glass-fluid-background/releases/download/v0.3.1/dsh-liquid-glass-fluid-background-0.3.1.tgz
 ```
 
 Replace `desktop` with `web` for the web profile. Fully restart Harness after the first installation. Open the **Liquid Glass** capsule near the lower-right corner.

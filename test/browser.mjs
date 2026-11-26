@@ -57,7 +57,16 @@ try {
 
   await page.evaluate(() => document.body.setAttribute('data-ds-dark-theme', ''));
   await page.waitForFunction(() => document.getElementById('dsh-liquid-glass-ui').hasAttribute('data-dark'));
+  await page.addStyleTag({content:'body[data-ds-dark-theme]{--dsw-alias-bg-base:#141414}'});
+  await page.evaluate(() => document.body.style.setProperty('--dsw-alias-bg-base', '#141414'));
+  await field('fluid').check();
+  assert.equal(await page.locator('.app').evaluate(node=>getComputedStyle(node).backgroundColor),'rgba(0, 0, 0, 0)');
+  await field('fluid').uncheck();
+  assert.equal(await page.locator('.app').evaluate(node=>getComputedStyle(node).backgroundColor),'rgb(20, 20, 20)');
+  await field('fluid').check();
+  ok('late host dark styles and inline tokens cannot hide the backdrop; disabling restores them');
   assert.match(await ui.locator('dialog').evaluate((node) => getComputedStyle(node).color), /228, 234, 247/);
+  assert.equal(await ui.locator('select option').first().evaluate(node=>getComputedStyle(node).backgroundColor),'rgb(32, 39, 55)');
   await field('fluid').check();
   await page.emulateMedia({ reducedMotion: 'reduce' });
   assert.equal(await page.locator('body').evaluate((node) => getComputedStyle(node).animationName), 'none');
