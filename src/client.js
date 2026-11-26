@@ -3,11 +3,13 @@ function mountLiquidGlass() {
   'use strict';
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
   const RUNTIME = Symbol.for('dsh.liquid-glass.runtime');
+  const STARTUP = Symbol.for('dsh.liquid-glass.startup');
+  const STARTUP_SEEN = Symbol.for('dsh.liquid-glass.startup.seen');
   const STORAGE_KEY = 'dsh.liquid-glass.v1';
   const BODY_ATTR = 'data-dsh-liquid-glass';
   const FLUID_ATTR = 'data-dsh-glass-fluid';
   const SURFACE_ATTR = 'data-dsh-glass-surface';
-  const DEFAULTS = { enabled: true, fluid: true, motion: true, blur: 18, saturate: 150, alpha: 100, preset: 'isolation' };
+  const DEFAULTS = { enabled: true, fluid: true, motion: true, startup: true, blur: 18, saturate: 150, alpha: 100, preset: 'isolation' };
   const PRESETS = {
     isolation: ['#cbb4cf', '#6582d2', '#aa3c8b', '#eef1f7'],
     aurora: ['#61d9ba', '#6887f0', '#ba98dd', '#edf6f7'],
@@ -70,12 +72,12 @@ function mountLiquidGlass() {
   const T = zh ? {
     title: '液态玻璃', subtitle: '玻璃、光线与缓慢流动的色彩', glass: '玻璃表面', fluid: '流体背景',
     motion: '背景动画', preset: '背景配色', blur: '磨砂模糊', saturate: '色彩饱和度', alpha: '表面不透明度',
-    reset: '恢复默认', close: '关闭设置', hint: '设置保存在此设备；跟随系统的低动态效果偏好。',
+    startup: '鲸鱼启动动画', replay: '重播启动动画', reset: '恢复默认', close: '关闭设置', hint: '设置保存在此设备；跟随系统的低动态效果偏好。',
     presets: ['隔离', '极光', '日落', '紫雾', '海洋', '银灰'],
   } : {
     title: 'Liquid Glass', subtitle: 'Glass, light and slowly drifting color', glass: 'Glass surfaces', fluid: 'Fluid background',
     motion: 'Background animation', preset: 'Palette', blur: 'Frost blur', saturate: 'Saturation', alpha: 'Surface opacity',
-    reset: 'Reset defaults', close: 'Close settings', hint: 'Saved on this device. Respects reduced motion.',
+    startup: 'Whale startup animation', replay: 'Replay startup', reset: 'Reset defaults', close: 'Close settings', hint: 'Saved on this device. Respects reduced motion.',
     presets: ['Isolation', 'Aurora', 'Sunset', 'Violet', 'Ocean', 'Silver'],
   };
   const CSS = `
@@ -101,7 +103,7 @@ dialog::backdrop{background:#15234230;backdrop-filter:blur(3px)}
 header{display:flex;align-items:start;justify-content:space-between;gap:12px;margin-bottom:20px}h2{margin:0 0 4px;font-size:21px;letter-spacing:-.5px}p{margin:0;font-size:12px;color:#59677e}
 .close{background:transparent;border:0;color:inherit;font-size:24px;line-height:1;padding:4px;border-radius:8px}
 .row{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:40px}.range{display:grid;grid-template-columns:1fr 48px;gap:6px;margin-top:14px}.range input{grid-column:1/-1;width:100%;margin:3px 0;accent-color:#6380df}output{text-align:right;color:#59677e;font-variant-numeric:tabular-nums}input[type=checkbox]{width:18px;height:18px;accent-color:#6380df;cursor:pointer}select{max-width:55%;border:1px solid #778baa40;border-radius:9px;background:#fff9;color:inherit;padding:5px 8px}
-.footer{border-top:1px solid #778baa25;margin-top:20px;padding-top:16px;display:flex;justify-content:flex-end}.reset{border:1px solid #778baa40;border-radius:10px;background:#fff7;color:inherit;padding:7px 12px}.hint{margin-top:12px;font-size:11px}
+.footer{border-top:1px solid #778baa25;margin-top:20px;padding-top:16px;display:flex;justify-content:space-between;gap:8px}.reset,.replay{border:1px solid #778baa40;border-radius:10px;background:#fff7;color:inherit;padding:7px 12px}.hint{margin-top:12px;font-size:11px}
 :host([data-dark]){color:#e4eaf7;color-scheme:dark}:host([data-dark]) .launcher{background:#242b3cce;border-color:#ffffff25}:host([data-dark]) dialog{background:#202737f5;border-color:#ffffff25}:host([data-dark]) p,:host([data-dark]) output{color:#a5b1c8}:host([data-dark]) select,:host([data-dark]) .reset{background:#ffffff0d}
 select option{background:#f6f8fb;color:#222a3b}:host([data-dark]) select option{background:#202737;color:#e4eaf7}
 @media(max-width:480px){:host{right:12px;bottom:76px}.launcher{padding:9px 11px}}
@@ -118,7 +120,7 @@ select option{background:#f6f8fb;color:#222a3b}:host([data-dark]) select option{
     try {
       const saved = JSON.parse(raw);
       if (!saved || typeof saved !== 'object' || Array.isArray(saved)) return cfg;
-      for (const key of ['enabled', 'fluid', 'motion']) if (typeof saved[key] === 'boolean') cfg[key] = saved[key];
+      for (const key of ['enabled', 'fluid', 'motion', 'startup']) if (typeof saved[key] === 'boolean') cfg[key] = saved[key];
       cfg.blur = clamp(saved.blur, 0, 40, DEFAULTS.blur);
       cfg.saturate = clamp(saved.saturate, 100, 220, DEFAULTS.saturate);
       cfg.alpha = clamp(saved.alpha, 10, 100, DEFAULTS.alpha);
@@ -140,12 +142,13 @@ select option{background:#f6f8fb;color:#222a3b}:host([data-dark]) select option{
   const marked = new Set();
   const listeners = new AbortController();
 
-  function dispose() {
+  function dispose({ handoff = false } = {}) {
     if (disposed) return;
     disposed = true;
     clearTimeout(timer);
     observer?.disconnect();
     listeners.abort();
+    if (!handoff) window[STARTUP]?.finish();
     if (dialog?.open) dialog.close();
     for (const node of marked) node.removeAttribute(SURFACE_ATTR);
     marked.clear();
@@ -189,6 +192,7 @@ body[${FLUID_ATTR}]{--dsh-lg-c1:${colors[0]};--dsh-lg-c2:${colors[1]};--dsh-lg-c
   function syncUi() {
     if (!shadow) return;
     ui.toggleAttribute('data-dark', document.body.hasAttribute('data-ds-dark-theme'));
+    window[STARTUP]?.updateTheme(document.body.hasAttribute('data-ds-dark-theme'));
     launcher.toggleAttribute('data-active', config.enabled || config.fluid);
     for (const input of shadow.querySelectorAll('[data-field]')) {
       const key = input.dataset.field;
@@ -204,7 +208,7 @@ body[${FLUID_ATTR}]{--dsh-lg-c1:${colors[0]};--dsh-lg-c2:${colors[1]};--dsh-lg-c
     // ponytail: bound one scan to 1,600 nodes / 100 surfaces; expand only if real layouts need it.
     const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_ELEMENT, {
       acceptNode(node) {
-        if (['SCRIPT', 'STYLE', 'SVG', 'PRE', 'CODE', 'P', 'INPUT', 'TEXTAREA'].includes(node.tagName) || node === ui) return NodeFilter.FILTER_REJECT;
+        if (['SCRIPT', 'STYLE', 'SVG', 'PRE', 'CODE', 'P', 'INPUT', 'TEXTAREA'].includes(node.tagName) || node === ui || node.id === 'dsh-liquid-glass-startup') return NodeFilter.FILTER_REJECT;
         return NodeFilter.FILTER_ACCEPT;
       },
     });
@@ -238,16 +242,17 @@ body[${FLUID_ATTR}]{--dsh-lg-c1:${colors[0]};--dsh-lg-c2:${colors[1]};--dsh-lg-c
 <button class="launcher" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="glass-settings"><span class="dot" aria-hidden="true"></span>${T.title}</button>
 <dialog id="glass-settings" aria-labelledby="glass-title" aria-describedby="glass-subtitle">
 <header><div><h2 id="glass-title">${T.title}</h2><p id="glass-subtitle">${T.subtitle}</p></div><button class="close" type="button" aria-label="${T.close}">×</button></header>
-${['enabled', 'fluid', 'motion'].map((key) => `<label class="row"><span>${T[key === 'enabled' ? 'glass' : key]}</span><input data-field="${key}" type="checkbox"></label>`).join('')}
+${['enabled', 'fluid', 'motion', 'startup'].map((key) => `<label class="row"><span>${T[key === 'enabled' ? 'glass' : key]}</span><input data-field="${key}" type="checkbox"></label>`).join('')}
 <label class="row"><span>${T.preset}</span><select data-field="preset">${Object.keys(PRESETS).map((key, i) => `<option value="${key}">${T.presets[i]}</option>`).join('')}</select></label>
 ${[['blur', 0, 40], ['saturate', 100, 220], ['alpha', 10, 100]].map(([key, min, max]) => `<label class="range"><span>${T[key]}</span><output data-output="${key}"></output><input data-field="${key}" type="range" min="${min}" max="${max}" step="1"></label>`).join('')}
-<div class="footer"><button class="reset" type="button">${T.reset}</button></div><p class="hint">${T.hint}</p></dialog>`;
+<div class="footer"><button class="replay" type="button">${T.replay}</button><button class="reset" type="button">${T.reset}</button></div><p class="hint">${T.hint}</p></dialog>`;
     dialog = shadow.querySelector('dialog');
     launcher = shadow.querySelector('.launcher');
     listen(launcher, 'click', () => { dialog.showModal(); launcher.setAttribute('aria-expanded', 'true'); });
     listen(shadow.querySelector('.close'), 'click', () => dialog.close());
     listen(dialog, 'close', () => { launcher.setAttribute('aria-expanded', 'false'); launcher.focus(); });
     listen(shadow.querySelector('.reset'), 'click', () => { config = { ...DEFAULTS }; save(); });
+    listen(shadow.querySelector('.replay'), 'click', () => { dialog.close(); playStartup(true); });
     for (const input of shadow.querySelectorAll('[data-field]')) {
       listen(input, input.type === 'range' ? 'input' : 'change', () => {
         const key = input.dataset.field;
@@ -257,6 +262,7 @@ ${[['blur', 0, 40], ['saturate', 100, 220], ['alpha', 10, 100]].map(([key, min, 
     }
     document.body.append(ui);
     paint();
+    playStartup();
     observer = new MutationObserver(guard((records) => {
       let added = false;
       for (const record of records) {
@@ -278,8 +284,24 @@ ${[['blur', 0, 40], ['saturate', 100, 220], ['alpha', 10, 100]].map(([key, min, 
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(config)); } catch { /* Continue for this session. */ }
     paint();
   }
+  function playStartup(replay = false) {
+    if (!replay && window[STARTUP_SEEN]) return;
+    window[STARTUP_SEEN] = true;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      || window.matchMedia('(forced-colors: active)').matches;
+    if (!replay && (!config.startup || reduced)) return;
+    try {
+      window[STARTUP]?.finish();
+      window[STARTUP] = createWhaleStartup({ dark: document.body.hasAttribute('data-ds-dark-theme'), reduced });
+    } catch (error) {
+      // Decoration failure leaves the working application and skin intact.
+      window[STARTUP]?.finish();
+      document.getElementById('dsh-liquid-glass-startup')?.remove();
+      console.warn('[dsh-liquid-glass] Startup animation skipped.', error);
+    }
+  }
   // A second boot row or a reloaded skin replaces the old instance, including observers.
-  window[RUNTIME]?.dispose();
+  window[RUNTIME]?.dispose({ handoff: true });
   window[RUNTIME] = { dispose };
   listen(window, 'pagehide', (event) => { if (!event.persisted) dispose(); });
   if (document.readyState === 'loading') listen(document, 'DOMContentLoaded', start);

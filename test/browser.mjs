@@ -15,6 +15,14 @@ const server = createServer((request, response) => {
 await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
 const browser = await chromium.launch({ headless: true, ...(process.env.PLAYWRIGHT_CHANNEL ? { channel: process.env.PLAYWRIGHT_CHANNEL } : {}) });
 const context = await browser.newContext({ viewport: { width: 1280, height: 900 }, locale: 'zh-CN' });
+// Startup lifecycle/visuals are exercised separately; these checks target the skin controls.
+await context.addInitScript(() => {
+  try {
+    const key = 'dsh.liquid-glass.v1';
+    const current = JSON.parse(localStorage.getItem(key) || '{}');
+    localStorage.setItem(key, JSON.stringify({ ...current, startup: false }));
+  } catch {}
+});
 const page = await context.newPage();
 const errors = [];
 page.on('pageerror', (error) => errors.push(error.message));

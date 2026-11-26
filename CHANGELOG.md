@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.0 — 2026-11-26
+
+- Add an optional whale-surfacing startup visual: layered ice-blue vector, perspective rise, specular sweep, waterline, reflection, ripples and droplets, then a fade to the application.
+- Preserve the running startup across early boot/client ownership handoff; never replay on skin hot reload.
+- Add persistent startup enable and explicit replay controls, Skip/key dismissal, reduced-motion static replay, a hard cleanup timeout and scope cleanup.
+- Embed the source whale vector at build time, with no network requests or rendering library.
+- Add seven startup browser scenarios, light/dark visual previews and logo source attribution.
+
 ## 0.3.1 — 2026-11-26
 
 - Fix the native Windows dark-theme center panel covering the gradient. The backdrop's base token now overrides later host theme sheets and inline tokens only while enabled.

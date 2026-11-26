@@ -1,6 +1,6 @@
 {
   "name": "dsh-liquid-glass-fluid-background",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "Liquid-glass surfaces and an independently configurable animated gradient background for DeepSeek Harness.",
   "type": "module",
   "license": "MIT",
@@ -20,11 +20,12 @@
     "./locale/*.json": "./locale/*.json",
     "./icon": "./assets/icon.svg"
   },
-  "files": ["lib", "locale", "assets/icon.svg", "cordis.patch.yml", "LICENSE", "README.md", "README.zh.md", "CHANGELOG.md", "COMPATIBILITY.md"],
+  "files": ["lib", "locale", "assets/icon.svg", "cordis.patch.yml", "LICENSE", "THIRD_PARTY_NOTICES.md", "README.md", "README.zh.md", "CHANGELOG.md", "COMPATIBILITY.md"],
   "scripts": {
     "build": "node scripts/build.mjs",
     "test": "node --test test/*.test.mjs",
     "test:browser": "node test/browser.mjs",
+    "test:startup": "node test/startup.mjs",
     "check": "npm run build && npm test",
     "prepack": "npm run check"
   },

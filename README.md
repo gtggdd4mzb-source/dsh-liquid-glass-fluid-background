@@ -2,7 +2,7 @@
 
 A maintained compatibility fork of [Ink-bai5844/dsh-liquid-glass-fluid-background](https://github.com/Ink-bai5844/dsh-liquid-glass-fluid-background), with the original MIT license preserved. Maintained by **gtggdd4mzb-source**. [中文说明](README.zh.md)
 
-Version **0.3.1** targets **DeepSeek Harness 0.2.2-rc.5** (Desktop and Web). It adds translucent surfaces and a CSS gradient background, with separate switches for each. It does not implement optical refraction or a WebGL fluid simulation.
+Version **0.4.0** targets **DeepSeek Harness 0.2.2-rc.5** (Desktop and Web). It adds translucent surfaces, a CSS gradient background, and a whale surfacing startup animation. It does not implement optical refraction or a WebGL fluid simulation.
 
 ![DSH 0.2.2-rc.5 running the skin](assets/dsh-home.png)
 ![Settings on the real DSH frontend](assets/dsh-settings.png)
@@ -11,13 +11,13 @@ These screenshots show the actual DSH 0.2.2-rc.5 Web frontend started from the i
 
 ## Install
 
-Use the CLI bundled with your current Harness, rather than a separately installed older CLI. With that CLI on your PATH:
+In the native Desktop app, install the release tarball from the Plugins page (the desktop profile is managed by Electron). In a Web profile, use the current Harness CLI:
 
 ```sh
-dsh plugin --profile desktop add https://github.com/gtggdd4mzb-source/dsh-liquid-glass-fluid-background/releases/download/v0.3.1/dsh-liquid-glass-fluid-background-0.3.1.tgz
+dsh plugin --profile web add https://github.com/gtggdd4mzb-source/dsh-liquid-glass-fluid-background/releases/download/v0.4.0/dsh-liquid-glass-fluid-background-0.4.0.tgz
 ```
 
-Replace `desktop` with `web` for the web profile. Fully restart Harness after the first installation. Open the **Liquid Glass** capsule near the lower-right corner.
+Fully restart Harness after the first installation. Open the **Liquid Glass** capsule near the lower-right corner.
 
 The package name and `ui-theme-liquid-glass` row intentionally match the original plugin, so this fork replaces that skin in the same profile. Do not enable two copies together. If another theme owns the same tokens, turn that theme off before assessing this one.
 
@@ -27,10 +27,16 @@ The package name and `ui-theme-liquid-glass` row intentionally match the origina
 - Six palettes: Isolation, Aurora, Sunset, Violet, Ocean and Silver.
 - Blur 0–40 px, saturation 100–220%, and surface opacity 10–100%.
 - Separate animation switch; system reduced-motion preferences take priority.
+- An optional startup animation: a layered ice-blue whale rises above a luminous waterline with reflection, ripples and a highlight sweep. It runs for about 2.8 seconds once per page boot, including a full app launch or page reload, then reveals the application. Plugin reloads do not replay it. The animation begins when the plugin can draw, not before Electron creates its window.
+- Turn **Whale startup animation** off for future launches, or use **Replay startup** to preview it. Click the overlay/Skip or press a key to dismiss it. Reduced motion and forced colors skip autoplay; an explicit replay shows a brief static reveal. The visual overlay never gates host readiness, and a hard timeout removes it even if CSS animation fails.
 - Light/dark appearance follows the Harness body theme attribute.
 - The settings dialog supports keyboard navigation, Escape, focus restoration, narrow windows, reduced transparency and forced colors.
 
 Settings stay on the current browser/device under `localStorage["dsh.liquid-glass.v1"]`. Existing numeric/boolean settings migrate in place. Blocked or corrupt storage falls back safely. The displayed surface opacity is a multiplier of each base material's opacity, not the opacity of the whole application.
+
+Startup visual, captured in the standalone test preview:
+
+![Whale surfacing startup visual](assets/startup-light.png)
 
 ## Integration and cleanup
 
@@ -53,10 +59,11 @@ npm ci
 npm run check
 npx playwright install chromium
 npm run test:browser
+npm run test:startup
 npm pack
 ```
 
-`src/client.js` is the single browser implementation. `npm run build` writes a classic inline payload and a lifecycle entry wrapped in DSH's `window.__ModuleLoader__.load` format; no transpiler or runtime dependencies are needed. Generated `lib/` files are committed so GitHub-source installation works without build scripts. Browser tests use a clearly labeled fixture, not an authenticated user session. `PLAYWRIGHT_CHANNEL=msedge` optionally selects installed Edge.
+`src/client.js` owns the skin; `src/startup.js` owns the optional startup visual. The build embeds the bundled whale vector into both delivery formats, without runtime asset requests. `npm run build` writes a classic inline payload and a lifecycle entry wrapped in DSH's `window.__ModuleLoader__.load` format; no transpiler or runtime dependencies are needed. Generated `lib/` files are committed so GitHub-source installation works without build scripts. Browser tests use a clearly labeled fixture, not an authenticated user session. `PLAYWRIGHT_CHANNEL=msedge` optionally selects installed Edge.
 
 Release validation also exercised the Cordis 4.1.0 event scope and the actual `renderIndexInjections` implementation extracted from DSH Desktop 0.2.2-rc.5. See [compatibility evidence](COMPATIBILITY.md) for the limits of that validation.
 
@@ -66,4 +73,4 @@ Remove or disable this package in Harness's Plugins page, then reload/restart if
 
 ## License and provenance
 
-MIT; see [LICENSE](LICENSE). Original project: **Ink-bai5844**. This fork rebuilds delivery, lifecycle, controls, validation and packaging for DSH 0.2.2. It is an independent community plugin, not an official DeepSeek release.
+MIT; see [LICENSE](LICENSE). Original project: **Ink-bai5844**. Whale contour: DeepSeek Harness's bundled favicon, with source attribution in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Layered vector shading and CSS perspective create a 2.5D visual, rather than a volumetric model. This fork is an independent community plugin, not an official DeepSeek release.

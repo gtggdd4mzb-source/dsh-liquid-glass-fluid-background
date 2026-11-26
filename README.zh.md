@@ -2,7 +2,7 @@
 
 这是 [Ink-bai5844 原插件](https://github.com/Ink-bai5844/dsh-liquid-glass-fluid-background) 的维护分支，保留原作者署名与 MIT 许可，由 **gtggdd4mzb-source** 维护。[English](README.md)
 
-**0.3.1** 面向 **DSH 0.2.2-rc.5 桌面端和 Web 端**：提供半透明玻璃表面与 CSS 渐变流体背景，两个效果可以分别开启。渐变背景不是 WebGL 流体模拟，也不包含光学折射。
+**0.4.0** 面向 **DSH 0.2.2-rc.5 桌面端和 Web 端**：提供半透明玻璃表面、CSS 渐变流体背景，以及鲸鱼浮出水面的启动动画。渐变背景不是 WebGL 流体模拟，也不包含光学折射。
 
 ![DSH 0.2.2-rc.5 实际运行效果](assets/dsh-home.png)
 ![DSH 中的设置面板](assets/dsh-settings.png)
@@ -11,13 +11,13 @@
 
 ## 安装
 
-请使用当前桌面端附带的 DSH 命令行，避免误用单独安装的旧 CLI：
+桌面端请在“插件”页选择版本发布页的安装包；desktop profile 由 Electron 管理。Web 端可用当前 DSH 命令行安装：
 
 ```sh
-dsh plugin --profile desktop add https://github.com/gtggdd4mzb-source/dsh-liquid-glass-fluid-background/releases/download/v0.3.1/dsh-liquid-glass-fluid-background-0.3.1.tgz
+dsh plugin --profile web add https://github.com/gtggdd4mzb-source/dsh-liquid-glass-fluid-background/releases/download/v0.4.0/dsh-liquid-glass-fluid-background-0.4.0.tgz
 ```
 
-Web 端把 `desktop` 改为 `web`。首次安装后完全退出并重启 DSH，在右下方打开“液态玻璃”。
+首次安装后完全退出并重启 DSH，在右下方打开“液态玻璃”。
 
 包名与插件行 ID 沿用原插件，因此同一 profile 内会替换旧版本。不要同时启用两份；如另一个主题也修改同名颜色令牌，请先停用另一个主题再查看效果。
 
@@ -28,8 +28,14 @@ Web 端把 `desktop` 改为 `web`。首次安装后完全退出并重启 DSH，�
 - 模糊 0–40 px、饱和度 100–220%、表面不透明度 10–100%。
 - 跟随 DSH 浅深色；支持键盘、Escape 关闭后焦点返回、窄屏设置面板。
 - 遵循系统低动态、减少透明度和强制对比色偏好。
+- 鲸鱼启动动画：冰蓝玻璃鲸鱼从水下模糊浮现，抬升并转正，带出倒影、水纹和掠过表面的高光；约 2.8 秒后淡入主界面。每次页面启动播放一次，刷新页面也会播放，插件热重载不会重复播放。它在插件开始绘制时出现，不替换 Electron 创建窗口前的系统启动画面。
+- 设置里提供“鲸鱼启动动画”开关和“重播启动动画”。点击画面/跳过，或按键即可提前结束。系统减少动态效果或强制对比色时不自动播放，手动重播仅显示短暂静态画面。装饰动画不阻止宿主启动，定时器会兜底移除。
 
 设置只保存在当前设备、当前站点的 `dsh.liquid-glass.v1` 中，并兼容旧版数值与开关。存储不可用时本次会话仍可使用。表面不透明度是各材质原始不透明度的倍率，不改变文字或整个应用的不透明度。
+
+启动动画独立预览（截取浮出水面的中段）：
+
+![鲸鱼启动动画](assets/startup-light.png)
 
 ## 兼容与卸载
 
@@ -43,10 +49,10 @@ Web 端把 `desktop` 改为 `web`。首次安装后完全退出并重启 DSH，�
 
 ## 开发
 
-Node 24.9+，执行 `npm ci`、`npm run check`、`npx playwright install chromium`、`npm run test:browser`、`npm pack`。
+Node 24.9+，执行 `npm ci`、`npm run check`、`npx playwright install chromium`、`npm run test:browser`、`npm run test:startup`、`npm pack`。
 
-`src/client.js` 是浏览器逻辑的唯一源码，构建脚本生成启动载荷与生命周期模块，运行时无额外依赖。仓库提交 `lib/`，直接从 GitHub 安装也有完整产物。验证范围见 [COMPATIBILITY.md](COMPATIBILITY.md)。
+`src/client.js` 管理皮肤，`src/startup.js` 管理启动动画，构建时把鲸鱼矢量内嵌到启动载荷与生命周期模块。动画用分层矢量和 CSS 透视实现 2.5D 厚度、光影与水面效果，运行时无额外依赖或素材网络请求。仓库提交 `lib/`，直接从 GitHub 安装也有完整产物。验证范围见 [COMPATIBILITY.md](COMPATIBILITY.md)。
 
 ## 来源
 
-原作者 **Ink-bai5844**；当前分支重做 0.2.2 加载适配、生命周期、设置面板与发布验证。MIT 许可见 [LICENSE](LICENSE)。这是独立社区插件。
+原作者 **Ink-bai5844**；鲸鱼轮廓沿用 DSH 自带 favicon，来源和许可见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。MIT 许可见 [LICENSE](LICENSE)。这是独立社区插件。
