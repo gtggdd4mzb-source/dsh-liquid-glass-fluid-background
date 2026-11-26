@@ -1,80 +1,38 @@
 {
   "name": "dsh-liquid-glass-fluid-background",
-  "version": "0.1.0",
-  "description": "DSH web plugin: optional liquid-glass overlay plus Isolation-style fluid backdrop",
-  "license": "MIT",
+  "version": "0.3.0",
+  "description": "Liquid-glass surfaces and an independently configurable animated gradient background for DeepSeek Harness.",
   "type": "module",
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "license": "MIT",
+  "author": "Ink-bai5844",
+  "contributors": ["gtggdd4mzb-source"],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gtggdd4mzb-source/dsh-liquid-glass-fluid-background.git"
+  },
+  "homepage": "https://github.com/gtggdd4mzb-source/dsh-liquid-glass-fluid-background#readme",
+  "bugs": "https://github.com/gtggdd4mzb-source/dsh-liquid-glass-fluid-background/issues",
+  "main": "./lib/index.js",
   "exports": {
-    ".": {
-      "types": "./lib/index.d.ts",
-      "default": "./lib/index.js"
-    },
-    "./invariant": {
-      "types": "./lib/invariant.d.ts",
-      "default": "./lib/invariant.js"
-    },
-    "./client": {
-      "default": "./lib/client.js"
-    },
-    "./package.json": "./package.json"
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./package.json": "./package.json",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./assets/icon.svg"
   },
-  "files": [
-    "lib/index.js",
-    "lib/invariant.js",
-    "lib/client.js",
-    "lib/index.d.ts",
-    "lib/invariant.d.ts",
-    "cordis.patch.yml",
-    "README.md",
-    "README.zh.md"
-  ],
+  "files": ["lib", "locale", "assets/icon.svg", "cordis.patch.yml", "LICENSE", "README.md", "README.zh.md", "CHANGELOG.md", "COMPATIBILITY.md"],
   "scripts": {
-    "pack": "pnpm pack"
+    "build": "node scripts/build.mjs",
+    "test": "node --test test/*.test.mjs",
+    "test:browser": "node test/browser.mjs",
+    "check": "npm run build && npm test",
+    "prepack": "npm run check"
   },
+  "engines": { "node": ">=24.9.0", "dsh": ">=0.2.2-rc.5 <0.2.3-0" },
   "dsh": {
-    "bundle": {
-      "patch": "./cordis.patch.yml"
-    },
-    "client": {
-      "inject": [
-        "@deepseek-ai/dsh-client-ui-theme",
-        "@deepseek-ai/dsh-client-runtime",
-        "@deepseek-ai/dsh-client-locale",
-        "@deepseek-ai/dsh-client-ui-settings",
-        "@deepseek-ai/dsh-client-connection",
-        "@deepseek-ai/dsh-api-remotes"
-      ],
-      "platform": "web"
-    }
+    "bundle": { "patch": "./cordis.patch.yml" },
+    "client": { "platform": "web", "inject": [] }
   },
-  "peerDependencies": {
-    "@deepseek-ai/cordis": "*",
-    "@deepseek-ai/dsh-api-remotes": "*",
-    "@deepseek-ai/dsh-client-connection": "*",
-    "@deepseek-ai/dsh-client-locale": "*",
-    "@deepseek-ai/dsh-client-runtime": "*",
-    "@deepseek-ai/dsh-client-ui-settings": "*",
-    "@deepseek-ai/dsh-client-ui-slots": "*",
-    "@deepseek-ai/dsh-client-ui-theme": "*",
-    "@deepseek-ai/dsh-host-webserver": "*",
-    "@deepseek-ai/dsh-invariants": "*",
-    "react": "^18.2.0"
-  },
-  "peerDependenciesMeta": {
-    "@deepseek-ai/dsh-host-webserver": {
-      "optional": true
-    },
-    "@deepseek-ai/dsh-invariants": {
-      "optional": true
-    }
-  },
-  "keywords": [
-    "dsh",
-    "deepseek-harness",
-    "dsh-plugin",
-    "liquid-glass",
-    "fluid"
-  ]
+  "keywords": ["dsh", "dsh-plugin", "deepseek-harness", "theme", "liquid-glass", "fluid"],
+  "devDependencies": { "playwright": "^1.58.0" }
 }

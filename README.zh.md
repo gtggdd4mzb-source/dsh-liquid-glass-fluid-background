@@ -1,81 +1,52 @@
-# dsh-liquid-glass-fluid-background
+# 液态玻璃 · 流体背景
 
-[English](README.md) | 中文
+这是 [Ink-bai5844 原插件](https://github.com/Ink-bai5844/dsh-liquid-glass-fluid-background) 的维护分支，保留原作者署名与 MIT 许可，由 **gtggdd4mzb-source** 维护。[English](README.md)
 
-可安装的 DeepSeek Harness **组合包**，作用于 Web GUI：可选 iOS 风格液态玻璃，以及不依赖玻璃开关的 Isolation 流体背景。
+**0.3.0** 面向 **DSH 0.2.2-rc.5 桌面端和 Web 端**：提供半透明玻璃表面与 CSS 渐变流体背景，两个效果可以分别开启。渐变背景不是 WebGL 流体模拟，也不包含光学折射。
 
-本目录已是可上传的插件 checkout。`lib/` 已经打好。安装入口不是 `src/`。
+![DSH 0.2.2-rc.5 实际运行效果](assets/dsh-home.png)
+![DSH 中的设置面板](assets/dsh-settings.png)
 
-![空白主页：液态玻璃与流体壁纸](images/主页.png)
-
-## 效果
-
-对话页（深色、玻璃开、流体壁纸）：
-
-![对话页：玻璃铬层叠在紫色流体上](images/对话页.png)
-
-浅色模式沿用同一套叠加层：
-
-![浅色模式对话页](images/浅色模式.png)
-
-流体关闭时，可用静态 `http(s)` 图片作画布：
-
-![自定义背景图上的对话页](images/自定义背景图.png)
-
-菜单铬层会透过玻璃边缘折射背后画面：
-
-![工作区权限菜单的边缘折射](images/按钮折射效果.png)
+以上为桌面安装包附带的 DSH 0.2.2-rc.5 Web 前端在干净隔离 profile 中的真实截图。另附的 `preview-light.png` / `preview-dark.png` 来自测试演示页，不是宿主运行截图。
 
 ## 安装
 
-需要已安装的 `dsh` CLI 和 **web** profile。
-
-在本目录执行：
+请使用当前桌面端附带的 DSH 命令行，避免误用单独安装的旧 CLI：
 
 ```sh
-dsh plugin --profile web add .
+dsh plugin --profile desktop add https://github.com/gtggdd4mzb-source/dsh-liquid-glass-fluid-background/releases/download/v0.3.0/dsh-liquid-glass-fluid-background-0.3.0.tgz
 ```
 
-或安装本目录里的 tarball：
+Web 端把 `desktop` 改为 `web`。首次安装后完全退出并重启 DSH，在右下方打开“液态玻璃”。
 
-```sh
-dsh plugin --profile web add ./dsh-liquid-glass-fluid-background-0.1.0.tgz
-```
+包名与插件行 ID 沿用原插件，因此同一 profile 内会替换旧版本。不要同时启用两份；如另一个主题也修改同名颜色令牌，请先停用另一个主题再查看效果。
 
-然后启动 Web：
+## 功能
 
-```sh
-dsh --profile web
-```
+- 玻璃表面、流体背景、背景动画分别开关。
+- 隔离、极光、日落、紫雾、海洋、银灰六种配色。
+- 模糊 0–40 px、饱和度 100–220%、表面不透明度 10–100%。
+- 跟随 DSH 浅深色；支持键盘、Escape 关闭后焦点返回、窄屏设置面板。
+- 遵循系统低动态、减少透明度和强制对比色偏好。
 
-打开 **设置 → 通用**。打开「液态玻璃」和／或「流体背景」。流体不依赖液态玻璃；两者都开时流体是壁纸。「交互动画」默认开启，给按钮弹窗和设置页 iOS 式缩放拉伸，不依赖液态玻璃；展开／收回／淡出滑块调节时长。
+设置只保存在当前设备、当前站点的 `dsh.liquid-glass.v1` 中，并兼容旧版数值与开关。存储不可用时本次会话仍可使用。表面不透明度是各材质原始不透明度的倍率，不改变文字或整个应用的不透明度。
 
-![通用设置：液态玻璃调参与流体背景](images/插件设置页1.png)
+## 兼容与卸载
 
-![通用设置：交互动画滑块](images/插件设置页2.png)
+通过 DSH 公开的 `webserver/index-inject` 行协议送达桌面和网页，并用不依赖已删除模块的 `dsh.client` 入口处理停用、重新启用和清理。不修改 DSH 安装文件，也不额外开放服务端口。
 
-流体预设（丝绸、柔和混色、光波、极光、等离子、烟雾）：
+停用时会清理自己的样式、面板、标记、监听器、观察器与定时器。仅消费启动注入行的部署需刷新页面或重启应用才会移除效果。保存过的个人偏好会保留；需要清空时删除上述本地存储键。
 
-![流体特效下拉菜单](images/背景特效选择.png)
+每次扫描最多检查 1,600 个节点、标记 100 个表面，文字流式更新不会触发全页扫描。后续宿主布局变化可能使部分区域不再呈现玻璃效果。兼容范围限定为已验证的 0.2.2 版本族，未声称验证所有后续 DSH 版本。
 
-四种自定义颜色会改写 Isolation 色场：
+插件不会访问网络、会话、文件或凭据，只读取自己的偏好、语言、宿主主题标记与表面样式。当前电脑的其他主题插件组合未作为全覆盖兼容测试；应逐个启用以排查颜色冲突。
 
-![自定义流体颜色后的对话页](images/背景特效自定义颜色.png)
+## 开发
 
-## 卸载
+Node 24.9+，执行 `npm ci`、`npm run check`、`npx playwright install chromium`、`npm run test:browser`、`npm pack`。
 
-```sh
-dsh plugin --profile web remove dsh-liquid-glass-fluid-background
-```
+`src/client.js` 是浏览器逻辑的唯一源码，构建脚本生成启动载荷与生命周期模块，运行时无额外依赖。仓库提交 `lib/`，直接从 GitHub 安装也有完整产物。验证范围见 [COMPATIBILITY.md](COMPATIBILITY.md)。
 
-## 内容
+## 来源
 
-- Host 半：设置命名空间 `ui-theme-liquid-glass`（玻璃参数 + 流体开关），以及在客户端树绘制前写入 `data-dsh-liquid-glass` 的 tapIndex 引导。发布的 `lib/index.js` 自包含，因此 `dsh plugin --profile web add .`（`link:` 到 checkout）不必在插件目录里解析 `@deepseek-ai/dsh-settings`。
-- 浏览器半：token 叠加层、霜化样式、SVG 透镜，以及 Isolation WebGL（或 CSS 渐变）画布。
-
-`@deepseek-ai/dsh-*` 由 web profile 提供，本组合包不重新发布它们。
-
-## 致谢
-
-- [liquid-glass-react](https://github.com/rdev/liquid-glass-react) — 本叠加层移植的 SVG 位移与色散玻璃滤镜。
-- [Isolation](https://github.com/Storyteller-Studios/Isolation) — 本插件将其 HLSL 色场着色器移植到 WebGL，用作流体背景。
+原作者 **Ink-bai5844**；当前分支重做 0.2.2 加载适配、生命周期、设置面板与发布验证。MIT 许可见 [LICENSE](LICENSE)。这是独立社区插件。

@@ -1,81 +1,69 @@
-# dsh-liquid-glass-fluid-background
+# Liquid Glass · Fluid Background
 
-English | [中文](README.zh.md)
+A maintained compatibility fork of [Ink-bai5844/dsh-liquid-glass-fluid-background](https://github.com/Ink-bai5844/dsh-liquid-glass-fluid-background), with the original MIT license preserved. Maintained by **gtggdd4mzb-source**. [中文说明](README.zh.md)
 
-Installable DeepSeek Harness **bundle** for the web GUI: optional iOS-style liquid glass, plus an Isolation-style fluid backdrop that can run with glass off.
+Version **0.3.0** targets **DeepSeek Harness 0.2.2-rc.5** (Desktop and Web). It adds translucent surfaces and a CSS gradient background, with separate switches for each. It does not implement optical refraction or a WebGL fluid simulation.
 
-This directory is a ready-to-upload plugin checkout. `lib/` is already built. Do not treat `src/` as the install entry.
+![DSH 0.2.2-rc.5 running the skin](assets/dsh-home.png)
+![Settings on the real DSH frontend](assets/dsh-settings.png)
 
-![Blank home with liquid glass and a fluid wallpaper](images/主页.png)
-
-## Preview
-
-Conversation page (dark, glass on, fluid wallpaper):
-
-![Conversation with glass chrome over a purple fluid field](images/对话页.png)
-
-Light mode keeps the same overlay on the built-in light palette:
-
-![Conversation in light mode](images/浅色模式.png)
-
-A static `http(s)` image as the canvas (fluid off):
-
-![Conversation over a custom background image](images/自定义背景图.png)
-
-Menu chrome picks up the backdrop through the glass rim:
-
-![Workspace-permission menu showing rim refraction](images/按钮折射效果.png)
+These screenshots show the actual DSH 0.2.2-rc.5 Web frontend started from the installed Desktop bundle in a clean isolated profile. The additional `preview-light.png` / `preview-dark.png` images show the included test fixture, not the host application.
 
 ## Install
 
-Requires a working `dsh` CLI and the **web** profile.
-
-From this directory:
+Use the CLI bundled with your current Harness, rather than a separately installed older CLI. With that CLI on your PATH:
 
 ```sh
-dsh plugin --profile web add .
+dsh plugin --profile desktop add https://github.com/gtggdd4mzb-source/dsh-liquid-glass-fluid-background/releases/download/v0.3.0/dsh-liquid-glass-fluid-background-0.3.0.tgz
 ```
 
-Or install the packed tarball in this folder:
+Replace `desktop` with `web` for the web profile. Fully restart Harness after the first installation. Open the **Liquid Glass** capsule near the lower-right corner.
+
+The package name and `ui-theme-liquid-glass` row intentionally match the original plugin, so this fork replaces that skin in the same profile. Do not enable two copies together. If another theme owns the same tokens, turn that theme off before assessing this one.
+
+## Controls
+
+- Glass surfaces and gradient background can be enabled independently.
+- Six palettes: Isolation, Aurora, Sunset, Violet, Ocean and Silver.
+- Blur 0–40 px, saturation 100–220%, and surface opacity 10–100%.
+- Separate animation switch; system reduced-motion preferences take priority.
+- Light/dark appearance follows the Harness body theme attribute.
+- The settings dialog supports keyboard navigation, Escape, focus restoration, narrow windows, reduced transparency and forced colors.
+
+Settings stay on the current browser/device under `localStorage["dsh.liquid-glass.v1"]`. Existing numeric/boolean settings migrate in place. Blocked or corrupt storage falls back safely. The displayed surface opacity is a multiplier of each base material's opacity, not the opacity of the whole application.
+
+## Integration and cleanup
+
+The host contributes a single inline script through the public `webserver/index-inject` event; it neither rewrites installed Harness files nor serves an extra script endpoint. A dependency-free `dsh.client` entry owns browser lifecycle cleanup, including disable/re-enable. The early script and the client entry share one singleton, so duplicate delivery does not duplicate the UI.
+
+On scope disposal, the skin removes its styles, settings UI, surface attributes, event handlers, observer and timers. Saved preferences are retained. In deployments that only consume boot rows, disabling/removing the plugin takes effect on the next page reload or app restart. Internal UI errors remove the overlay and leave the host theme in place.
+
+Surface discovery is bounded to 1,600 nodes and 100 marked surfaces per scan. Text-only streaming updates do not trigger a scan. Future changes to host markup may leave some surfaces unstyled; compatibility is only declared for the tested 0.2.2 version family. The declared engine range explicitly includes the 0.2.2 prerelease tuple.
+
+## Privacy
+
+The skin makes no network requests, requests no account/API credentials, and does not read conversations, files or host settings. It only reads its own preferences, the document language, the host theme attribute, and surface geometry/computed colors.
+
+## Develop and verify
+
+Requires Node 24.9+:
 
 ```sh
-dsh plugin --profile web add ./dsh-liquid-glass-fluid-background-0.1.0.tgz
+npm ci
+npm run check
+npx playwright install chromium
+npm run test:browser
+npm pack
 ```
 
-Then start the web surface:
+`src/client.js` is the single browser implementation. `npm run build` writes a classic inline payload and a lifecycle entry wrapped in DSH's `window.__ModuleLoader__.load` format; no transpiler or runtime dependencies are needed. Generated `lib/` files are committed so GitHub-source installation works without build scripts. Browser tests use a clearly labeled fixture, not an authenticated user session. `PLAYWRIGHT_CHANNEL=msedge` optionally selects installed Edge.
 
-```sh
-dsh --profile web
-```
-
-Open **Settings → General**. Turn on **Liquid Glass** and/or **Fluid background**. Fluid does not require glass. When both are on, fluid is the wallpaper. **Interaction motion** (on by default) plays an iOS-style squash-stretch on composer popovers and the settings dialog and does not require Liquid Glass; Open / Close / Fade sliders set the durations.
-
-![General settings: liquid-glass tuners and fluid background](images/插件设置页1.png)
-
-![General settings: interaction motion sliders](images/插件设置页2.png)
-
-Fluid presets (`silk`, `hsv`, `wave`, `aurora`, `plasma`, `smoke`):
-
-![Fluid preset menu](images/背景特效选择.png)
-
-Four custom colors rewrite the Isolation field:
-
-![Conversation after custom fluid colors](images/背景特效自定义颜色.png)
+Release validation also exercised the Cordis 4.1.0 event scope and the actual `renderIndexInjections` implementation extracted from DSH Desktop 0.2.2-rc.5. See [compatibility evidence](COMPATIBILITY.md) for the limits of that validation.
 
 ## Remove
 
-```sh
-dsh plugin --profile web remove dsh-liquid-glass-fluid-background
-```
+Remove or disable this package in Harness's Plugins page, then reload/restart if necessary. To erase saved preferences too, remove `dsh.liquid-glass.v1` from the origin's local storage. No host installation files need restoring.
 
-## What it ships
+## License and provenance
 
-- Host half: settings namespace `ui-theme-liquid-glass` (glass tunables + fluid flags) and a tapIndex bootstrap that stamps `data-dsh-liquid-glass` before the client tree paints. The published `lib/index.js` is self-contained, so `dsh plugin --profile web add .` (a `link:` checkout) can load without resolving `@deepseek-ai/dsh-settings` from the plugin directory.
-- Browser half: token overlay, frost stylesheet, SVG lens, and the Isolation WebGL (or CSS-gradient) canvas.
-
-Peer packages come from the dsh web profile. This bundle does not republish `@deepseek-ai/dsh-*`.
-
-## Acknowledgements
-
-- [liquid-glass-react](https://github.com/rdev/liquid-glass-react) — the SVG displacement and chromatic-aberration glass filter this overlay ports.
-- [Isolation](https://github.com/Storyteller-Studios/Isolation) — the HLSL color-field shader this plugin ports to WebGL for the fluid backdrop.
+MIT; see [LICENSE](LICENSE). Original project: **Ink-bai5844**. This fork rebuilds delivery, lifecycle, controls, validation and packaging for DSH 0.2.2. It is an independent community plugin, not an official DeepSeek release.
