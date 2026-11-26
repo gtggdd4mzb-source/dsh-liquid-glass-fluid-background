@@ -2,19 +2,24 @@
 
 这是 [Ink-bai5844 原插件](https://github.com/Ink-bai5844/dsh-liquid-glass-fluid-background) 的维护分支，保留原作者署名与 MIT 许可，由 **gtggdd4mzb-source** 维护。[English](README.md)
 
-**0.5.0** 面向 **DSH 0.2.2-rc.5 桌面端和 Web 端**：新增四色调色工作台、四种可调流动背景与 SVG 背景像素折射。折射是网页端近似实现，与苹果 iOS 原生渲染器和物理光线追踪不同；背景采用 CSS 程序动画，不是流体物理模拟。
+**0.6.1** 面向 **DSH 0.2.2-rc.5 桌面端和 Web 端**。修复会话消息区空白处点击不触发涟漪的问题；编辑框、按钮和链接仍保留原有交互。会话皮肤会识别真实 DSH 页面结构，不再依赖测试预览专用标记。之前版本的四色调色盘、流动背景、边缘折射和鲸鱼启动动画继续保留。折射与波纹高光均为网页端数值/绘制近似，不是 iOS 私有渲染器或光线追踪；模拟计算水面高度并按法线着色，不会改变宿主消息内容或输入逻辑。
+
+![液态玻璃 DSH 会话界面预览](assets/session-light.png)
+![液态玻璃 DSH 深色会话界面预览](assets/session-dark.png)
 
 ![DSH 0.2.2-rc.5 实际运行效果](assets/dsh-home.png)
 ![DSH 中的设置面板](assets/dsh-settings.png)
 
 以上为桌面安装包附带的 DSH 0.2.2-rc.5 Web 前端在干净隔离 profile 中的真实截图。另附的 `preview-light.png` / `preview-dark.png` 来自测试演示页，不是宿主运行截图。
 
+会话样式的 `session-light.png` / `session-dark.png` 与交互预览 HTML 使用 DSH 0.2.2-rc.5 的真实 DOM 标记制作，但内容为测试对话，不是 Harness 截图。
+
 ## 安装
 
 桌面端请在“插件”页选择版本发布页的安装包；desktop profile 由 Electron 管理。Web 端可用当前 DSH 命令行安装：
 
 ```sh
-dsh plugin --profile web add https://github.com/gtggdd4mzb-source/dsh-liquid-glass-fluid-background/releases/download/v0.5.0/dsh-liquid-glass-fluid-background-0.5.0.tgz
+dsh plugin --profile web add https://github.com/gtggdd4mzb-source/dsh-liquid-glass-fluid-background/releases/download/v0.6.1/dsh-liquid-glass-fluid-background-0.6.1.tgz
 ```
 
 首次安装后完全退出并重启 DSH，在右下方打开“液态玻璃”。
@@ -30,6 +35,8 @@ dsh plugin --profile web add https://github.com/gtggdd4mzb-source/dsh-liquid-gla
 - “玻璃”页支持 0–50 px 边缘折射、玻璃高光与跟随指针高光。位移弯曲背景像素，不过滤表面文字。建议模糊调至 3–8 px 查看更通透的效果。
 - 设置分为“背景 / 玻璃 / 启动”三页，方向键可切换页签。
 - 模糊 0–40 px、饱和度 100–220%、表面不透明度 10–100%。
+- 涟漪开关和力度控制。左键点击 DSH 空白背景注入波源；二维高度网格按固定时间步长迭代，波动会传播、相互叠加并阻尼衰减。求解上限 220×140 格，仅有波动时绘制；点击输入框、按钮、链接和消息区不会触发水波。
+- 会话页签为默认开启的独立皮肤：重绘宿主会话标题和视图标签、调整对话留白与用户消息表面、输入栏磨砂玻璃；保持 DSH 原有消息、附件、菜单和编辑器功能。设置入口在与输入栏重叠时自动上移。
 - 跟随 DSH 浅深色；支持键盘、Escape 关闭后焦点返回、窄屏设置面板。
 - 遵循系统低动态、减少透明度和强制对比色偏好。
 - 鲸鱼启动动画：冰蓝玻璃鲸鱼从水下模糊浮现，抬升并转正，带出倒影、水纹和掠过表面的高光；约 2.8 秒后淡入主界面。每次页面启动播放一次，刷新页面也会播放，插件热重载不会重复播放。它在插件开始绘制时出现，不替换 Electron 创建窗口前的系统启动画面。

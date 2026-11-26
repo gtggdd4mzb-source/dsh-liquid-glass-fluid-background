@@ -31,7 +31,7 @@ let passed = 0;
 function ok(name) { passed++; console.log('PASS ' + name); }
 const ui = page.locator('#dsh-liquid-glass-ui');
 const field = key => Object.fromEntries(['fill','selectOption','check','uncheck','inputValue','isChecked'].map(method => [method, async (...args) => {
-  const tab = ['enabled','refraction','shine','interactive','blur','saturate','alpha'].includes(key) ? 'material' : key==='startup' ? 'boot' : 'background';
+  const tab = ['enabled','refraction','shine','interactive','blur','saturate','alpha'].includes(key) ? 'material' : key==='startup' ? 'boot' : key==='sessionDesign' ? 'conversation' : 'background';
   await ui.locator(`[data-tab="${tab}"]`).click();
   return ui.locator(`[data-field="${key}"]`)[method](...args);
 }]));
@@ -43,7 +43,45 @@ try {
   assert.equal(await page.locator('body').getAttribute('data-dsh-liquid-glass'), '');
   ok('boot before DOMContentLoaded and real computed-style surface discovery');
 
+  const ripple = page.locator('#dsh-liquid-glass-ripple');
+  await page.mouse.click(1060, 720);
+  await page.waitForFunction(() => {
+    const canvas = document.querySelector('#dsh-liquid-glass-ripple');
+    const data = canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height).data;
+    for (let i=3;i<data.length;i+=4) if (data[i] > 0) return true;
+    return false;
+  });
+  const waveFrame = await ripple.evaluate(canvas => [...canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height).data].filter((_,i)=>i%4===3).reduce((sum,a)=>sum+a,0));
+  await page.mouse.click(1060, 720);
+  await page.waitForTimeout(80);
+  const interferenceFrame = await ripple.evaluate(canvas => [...canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height).data].filter((_,i)=>i%4===3).reduce((sum,a)=>sum+a,0));
+  assert.ok(interferenceFrame > 0 && waveFrame > 0);
   await ui.locator('.launcher').click();
+  await field('ripple').uncheck();
+  assert.equal(await ripple.evaluate(canvas => canvas.hidden), true);
+  await field('ripple').check();
+  assert.equal(await ripple.evaluate(canvas => canvas.hidden), false);
+  ok('background clicks create a live wave field, repeated impulses coexist, and ripple control cleans up');
+
+  await ui.locator('[data-tab="conversation"]').click();
+  await field('sessionDesign').uncheck();
+  assert.equal(await page.locator('body').getAttribute('data-dsh-session-design'), null);
+  await field('sessionDesign').check();
+  assert.equal(await page.locator('body').getAttribute('data-dsh-session-design'), '');
+  const session = await page.evaluate(() => {
+    const root=document.createElement('section');root.setAttribute('data-conversation-content','');
+    root.innerHTML='<div data-conversation-header-leading>Studio</div><div data-conversation-tabs><button role="tab" aria-selected="true">Chat</button></div><div data-conversation-region="chat"><div data-chat-flow>Message</div></div><div data-conversation-region="composer"><div contenteditable="true">Draft</div></div>';
+    document.body.append(root);
+    return {header:getComputedStyle(root.querySelector('[data-conversation-header-leading]')).backdropFilter,composer:getComputedStyle(root.querySelector('[data-conversation-region=composer]')).borderRadius};
+  });
+  assert.match(session.header,/blur/); assert.equal(session.composer,'25px');
+  await ui.locator('.close').click();
+  await page.locator('[data-conversation-region="composer"] [contenteditable]').fill('Functional draft');
+  assert.equal(await page.locator('[data-conversation-region="composer"] [contenteditable]').innerText(),'Functional draft');
+  await page.locator('[data-conversation-content]').last().evaluate(node=>node.remove());
+  await ui.locator('.launcher').click();
+  await ui.locator('[data-tab="background"]').click();
+  ok('dedicated iOS-inspired conversation toggle skins semantic host regions and keeps composer editable');
   await field('blur').fill('32');
   await field('preset').selectOption('aurora');
   await field('enabled').uncheck();

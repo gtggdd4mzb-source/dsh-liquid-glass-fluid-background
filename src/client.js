@@ -1,4 +1,99 @@
 /* Presentation only: no remote requests, host API calls, or application data reads. */
+function createWaterSurface(canvas, backdrop) {
+  const ctx = canvas.getContext('2d', { alpha: true });
+  if (!ctx) return { sync() {}, dispose() {} };
+  const controller = new AbortController();
+  let width = 1, height = 1, previous = new Float32Array(1), current = new Float32Array(1);
+  let pixels, frame = 0, last = 0, accumulator = 0, running = false, strength = 65, enabled = false;
+  const spacing = 8, damping = 0.992, waveSpeed = 0.19;
+  function resize() {
+    width = Math.max(2, Math.min(220, Math.ceil(innerWidth / spacing)));
+    height = Math.max(2, Math.min(140, Math.ceil(innerHeight / spacing)));
+    canvas.width = width; canvas.height = height;
+    canvas.style.width = `${innerWidth}px`; canvas.style.height = `${innerHeight}px`;
+    previous = new Float32Array(width * height); current = new Float32Array(width * height);
+    pixels = ctx.createImageData(width, height); accumulator = 0; last = 0;
+  }
+  function energy() {
+    let sum = 0;
+    for (let i = 0; i < current.length; i += 8) sum += Math.abs(current[i]);
+    return sum;
+  }
+  function add(x, y) {
+    const cx = Math.round(x / innerWidth * (width - 1)), cy = Math.round(y / innerHeight * (height - 1));
+    const radius = Math.max(2, Math.min(width, height) * 0.045), reach = Math.ceil(radius * 3.2);
+    const amp = 3.6 * strength / 65;
+    for (let yy = Math.max(1, cy - reach); yy < Math.min(height - 1, cy + reach); yy++) {
+      for (let xx = Math.max(1, cx - reach); xx < Math.min(width - 1, cx + reach); xx++) {
+        const d = Math.hypot(xx - cx, yy - cy);
+        if (d < reach) current[yy * width + xx] += amp * Math.exp(-d * d / (2 * radius * radius));
+      }
+    }
+    if (!running) { running = true; last = 0; frame = requestAnimationFrame(draw); }
+  }
+  function color(css, fallback) {
+    const m = /^#([0-9a-f]{6})$/i.exec(css.trim());
+    return m ? [parseInt(m[1].slice(0,2),16), parseInt(m[1].slice(2,4),16), parseInt(m[1].slice(4),16)] : fallback;
+  }
+  function draw(time) {
+    frame = 0;
+    if (!enabled || document.hidden) { running = false; last = 0; return; }
+    const dt = Math.min(50, last ? time - last : 16.667); last = time; accumulator += dt;
+    const step = 16.667, coefficient = waveSpeed * waveSpeed;
+    let steps = 0;
+    while (accumulator >= step && steps++ < 2) {
+      for (let y = 1; y < height - 1; y++) {
+        const row = y * width;
+        for (let x = 1; x < width - 1; x++) {
+          const i = row + x;
+          const lap = current[i - 1] + current[i + 1] + current[i - width] + current[i + width] - 4 * current[i];
+          const value = (2 * current[i] - previous[i] + coefficient * lap) * damping;
+          previous[i] = value;
+        }
+      }
+      const swap = current; current = previous; previous = swap; accumulator -= step;
+    }
+    const style = getComputedStyle(document.body);
+    const c1 = color(style.getPropertyValue('--dsh-lg-c1'), [105,190,193]);
+    const c2 = color(style.getPropertyValue('--dsh-lg-c2'), [104,139,202]);
+    const data = pixels.data;
+    for (let y = 1; y < height - 1; y++) for (let x = 1; x < width - 1; x++) {
+      const i = y * width + x, dx = current[i + 1] - current[i - 1], dy = current[i + width] - current[i - width];
+      const slope = Math.min(1, Math.hypot(dx, dy) * 2.8), h = current[i];
+      const shine = Math.max(0, (dx * -.48 - dy * .72 + h * .09) * 32);
+      const shade = Math.max(0, (-dx * .3 + dy * .45 - h * .08) * 15);
+      const p = i * 4;
+      data[p] = Math.max(0, Math.min(255, c1[0] * .66 + c2[0] * .34 + shine - shade));
+      data[p + 1] = Math.max(0, Math.min(255, c1[1] * .66 + c2[1] * .34 + shine - shade));
+      data[p + 2] = Math.max(0, Math.min(255, c1[2] * .66 + c2[2] * .34 + shine - shade));
+      data[p + 3] = Math.min(228, slope * 175 + Math.min(80, Math.abs(h) * 25));
+    }
+    ctx.putImageData(pixels, 0, 0);
+    if (energy() > 0.035) frame = requestAnimationFrame(draw);
+    else { ctx.clearRect(0,0,width,height); current.fill(0); previous.fill(0); running = false; last = 0; }
+  }
+  function pointer(event) {
+    if (!enabled || event.button !== 0 || event.isPrimary === false) return;
+    const path = event.composedPath();
+    if (path.some(node => node instanceof Element && (node.matches('button,a,input,textarea,select,[contenteditable=true],[role=button],[data-conversation-region="composer"],[data-dsh-glass-owned]') || node.id === 'dsh-liquid-glass-ui'))) return;
+    add(event.clientX, event.clientY);
+  }
+  // The backdrop is pointer-transparent; listen at document for clicks on the host's empty canvas.
+  document.addEventListener('pointerdown', pointer, { signal: controller.signal });
+  window.addEventListener('resize', resize, { signal: controller.signal });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && running && !frame) frame = requestAnimationFrame(draw); }, { signal: controller.signal });
+  resize();
+  return {
+    sync(config) {
+      enabled = config.fluid && config.ripple;
+      strength = config.rippleStrength;
+      canvas.hidden = !enabled;
+      if (!enabled) { cancelAnimationFrame(frame); frame = 0; running = false; current.fill(0); previous.fill(0); ctx.clearRect(0,0,width,height); }
+    },
+    dispose() { cancelAnimationFrame(frame); controller.abort(); ctx.clearRect(0,0,width,height); },
+  };
+}
+
 function mountLiquidGlass() {
   'use strict';
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
@@ -10,7 +105,7 @@ function mountLiquidGlass() {
   const FLUID_ATTR = 'data-dsh-glass-fluid';
   const SURFACE_ATTR = 'data-dsh-glass-surface';
   const DEFAULTS = {
-    enabled:true, fluid:true, motion:true, startup:true, blur:18, saturate:150, alpha:100, preset:'isolation',
+    enabled:true, fluid:true, motion:true, ripple:true, sessionDesign:true, rippleStrength:65, startup:true, blur:18, saturate:150, alpha:100, preset:'isolation',
     speed:100, flow:'drift', amount:55, depth:50, colorSaturation:100, refraction:24, shine:45, interactive:true,
     customColors:['#cbb4cf', '#6582d2', '#aa3c8b', '#eef1f7'],
   };
@@ -75,7 +170,7 @@ function mountLiquidGlass() {
 
   const zh = (navigator.language || document.documentElement.lang || '').toLowerCase().startsWith('zh');
   const T = zh ? {
-    title: '液态玻璃', subtitle: '玻璃、光线与缓慢流动的色彩', glass: '玻璃表面', fluid: '流体背景',
+    title: '液态玻璃', subtitle: '玻璃、光线与缓慢流动的色彩', glass: '玻璃表面', fluid: '流体背景', ripple:'点击水面涟漪', rippleStrength:'涟漪力度', sessionDesign:'iOS 会话界面', sessionTab:'会话',
     motion: '背景动画', preset: '背景配色', blur: '磨砂模糊', saturate: '色彩饱和度', alpha: '表面不透明度',
     startup: '鲸鱼启动动画', replay: '重播启动动画', reset: '恢复默认', close: '关闭设置', hint: '设置保存在此设备；跟随系统的低动态效果偏好。',
     presets: ['隔离', '极光', '日落', '紫雾', '海洋', '银灰'],
@@ -83,7 +178,7 @@ function mountLiquidGlass() {
     speed:'流动速度', amount:'流动幅度', depth:'颜色深浅', colorSaturation:'色彩浓度', refraction:'边缘折射', shine:'玻璃高光', interactive:'跟随指针高光',
     palette:'四色调色盘', color:'颜色', opticalHint:'折射弯曲背景，表面文字保持清晰。低模糊更通透。',
   } : {
-    title: 'Liquid Glass', subtitle: 'Glass, light and slowly drifting color', glass: 'Glass surfaces', fluid: 'Fluid background',
+    title: 'Liquid Glass', subtitle: 'Glass, light and slowly drifting color', glass: 'Glass surfaces', fluid: 'Fluid background', ripple:'Interactive ripples', rippleStrength:'Ripple strength', sessionDesign:'iOS conversation', sessionTab:'Chat',
     motion: 'Background animation', preset: 'Palette', blur: 'Frost blur', saturate: 'Saturation', alpha: 'Surface opacity',
     startup: 'Whale startup animation', replay: 'Replay startup', reset: 'Reset defaults', close: 'Close settings', hint: 'Saved on this device. Respects reduced motion.',
     presets: ['Isolation', 'Aurora', 'Sunset', 'Violet', 'Ocean', 'Silver'],
@@ -114,12 +209,29 @@ body[data-dsh-liquid-glass] [data-dsh-glass-surface]{-webkit-backdrop-filter:blu
 body[data-ds-dark-theme][data-dsh-liquid-glass] [data-dsh-glass-surface]{box-shadow:0 8px 28px #0003,inset 0 1px 0 #ffffff28,inset 0 0 0 1px #ffffff14}
 body[data-dsh-liquid-glass] [data-dsh-lg-lens]{-webkit-backdrop-filter:var(--dsh-lg-lens-filter);backdrop-filter:var(--dsh-lg-lens-filter)}
 .dsh-lg-sheen{position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:var(--dsh-lg-shine,.45);background:radial-gradient(ellipse at var(--dsh-lg-light-x,25%) var(--dsh-lg-light-y,0%),#ffffff60,transparent 58%),linear-gradient(145deg,#ffffff45,transparent 28%,transparent 72%,#d5eeff35);box-shadow:inset 0 1px 0 #fffffff0,inset 1px 0 0 #ffffff60,inset -1px -1px 0 #ffffff35}
+#dsh-liquid-glass-ripple{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;image-rendering:auto;opacity:.86}
+body[data-dsh-session-design] [data-conversation-content]{--dsh-session-ink:#25313d;--dsh-session-muted:#788692;--dsh-session-glass:#ffffff9c;--dsh-session-line:#ffffffbd;--dsh-session-accent:#6d9da0;min-width:0;color:var(--dsh-session-ink)}
+body[data-dsh-session-design][data-ds-dark-theme] [data-conversation-content]{--dsh-session-ink:#edf3f2;--dsh-session-muted:#a3b3b4;--dsh-session-glass:#1d2a2dd6;--dsh-session-line:#ffffff20;--dsh-session-accent:#9dd8d1}
+body[data-dsh-session-design] [data-conversation-header-leading]{padding:7px 12px;border:1px solid var(--dsh-session-line);border-radius:16px;background:var(--dsh-session-glass);backdrop-filter:blur(18px) saturate(150%);box-shadow:0 8px 26px #17272d10}
+body[data-dsh-session-design] [data-conversation-tabs]{gap:8px;padding:4px 10px;border:1px solid var(--dsh-session-line);border-radius:14px;background:var(--dsh-session-glass);backdrop-filter:blur(18px) saturate(145%)}
+body[data-dsh-session-design] [data-conversation-tabs] [role=tab]{min-height:30px;margin:0;padding:6px 12px;border-radius:10px;color:var(--dsh-session-muted)}
+body[data-dsh-session-design] [data-conversation-tabs] [role=tab][aria-selected=true]{color:var(--dsh-session-ink);background:#ffffff9c;box-shadow:0 2px 7px #14243214}
+body[data-dsh-session-design][data-ds-dark-theme] [data-conversation-tabs] [role=tab][aria-selected=true]{background:#ffffff18}
+body[data-dsh-session-design] [data-conversation-region=chat]{padding-inline:clamp(16px,4vw,64px)}
+body[data-dsh-session-design] [data-conversation-region=composer]{margin-inline:auto;margin-bottom:18px;width:min(920px,calc(100% - 40px));padding:8px 14px;border:1px solid var(--dsh-session-line);border-radius:25px;background:var(--dsh-session-glass);backdrop-filter:blur(24px) saturate(155%);box-shadow:0 14px 42px #14252e18,inset 0 1px 0 #ffffffa8}
+body[data-dsh-session-design] [data-conversation-region=composer] [contenteditable=true]{color:var(--dsh-session-ink)}
+body[data-dsh-session-design] [data-conversation-region=composer] button[aria-label*=Send],body[data-dsh-session-design] [data-conversation-region=composer] button[aria-label*=发送]{border-radius:14px}
+body[data-dsh-session-design] [data-chat-flow-kind=user]>div,body[data-dsh-session-design] [data-chat-flow-kind=steering]>div{max-width:min(78%,680px);padding:12px 16px;border:1px solid #ffffffba;border-radius:20px 20px 6px 20px;background:linear-gradient(145deg,#e7f3f1dc,#eaf0f9dd);box-shadow:0 6px 20px #27444b0c}
+body[data-dsh-session-design][data-ds-dark-theme] [data-chat-flow-kind=user]>div,body[data-dsh-session-design][data-ds-dark-theme] [data-chat-flow-kind=steering]>div{border-color:#ffffff20;background:linear-gradient(145deg,#314342cc,#30384ad9)}
+body[data-dsh-session-design] [data-chat-flow] [data-turn-process-member]{border-radius:14px}
+body[data-dsh-session-design] [data-conversation-region=chat] a{color:var(--dsh-session-accent)}
 @media(prefers-reduced-motion:reduce){body #dsh-liquid-glass-backdrop .dsh-lg-blob{animation-play-state:paused!important;will-change:auto}}
 @media(prefers-reduced-transparency:reduce){body[data-dsh-liquid-glass] [data-dsh-glass-surface]{backdrop-filter:none;-webkit-backdrop-filter:none;background-color:Canvas}}
 @media(forced-colors:active){body[data-dsh-glass-fluid]{background:Canvas!important;animation:none}#dsh-liquid-glass-backdrop,.dsh-lg-sheen{display:none!important}body[data-dsh-liquid-glass] [data-dsh-glass-surface]{backdrop-filter:none;-webkit-backdrop-filter:none;box-shadow:none;background-color:Canvas}}
 `;
   const UI_CSS = `
 :host{all:initial;position:fixed;right:20px;bottom:88px;z-index:2147483000;font:13px/1.5 system-ui,-apple-system,"Segoe UI","Microsoft YaHei",sans-serif;color:#222a3b;color-scheme:light}
+:host([data-session-design]){bottom:180px}
 *{box-sizing:border-box}button,input,select{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #4278ee;outline-offset:3px}
 .launcher{display:flex;align-items:center;gap:8px;padding:9px 14px;border:1px solid #ffffffa0;border-radius:99px;color:inherit;background:#ffffffb8;backdrop-filter:blur(18px);box-shadow:0 6px 24px #14264b18;font-weight:600}
 .dot{width:10px;height:10px;border-radius:50%;background:#98a2b3}.launcher[data-active] .dot{background:linear-gradient(135deg,#8edfe4,#7a84ef)}
@@ -147,11 +259,11 @@ select option{background:#f6f8fb;color:#222a3b}:host([data-dark]) select option{
     try {
       const saved = JSON.parse(raw);
       if (!saved || typeof saved !== 'object' || Array.isArray(saved)) return cfg;
-      for (const key of ['enabled', 'fluid', 'motion', 'startup', 'interactive']) if (typeof saved[key] === 'boolean') cfg[key] = saved[key];
+    for (const key of ['enabled', 'fluid', 'motion', 'ripple', 'sessionDesign', 'startup', 'interactive']) if (typeof saved[key] === 'boolean') cfg[key] = saved[key];
       cfg.blur = clamp(saved.blur, 0, 40, DEFAULTS.blur);
       cfg.saturate = clamp(saved.saturate, 100, 220, DEFAULTS.saturate);
       cfg.alpha = clamp(saved.alpha, 10, 100, DEFAULTS.alpha);
-      for (const [key, min, max] of [['speed',10,300],['amount',0,100],['depth',0,100],['colorSaturation',0,180],['refraction',0,50],['shine',0,100]]) cfg[key] = clamp(saved[key], min, max, DEFAULTS[key]);
+      for (const [key, min, max] of [['speed',10,300],['amount',0,100],['depth',0,100],['colorSaturation',0,180],['rippleStrength',10,100],['refraction',0,50],['shine',0,100]]) cfg[key] = clamp(saved[key], min, max, DEFAULTS[key]);
       if (FLOWS.includes(saved.flow)) cfg.flow = saved.flow;
       if (Object.hasOwn(PRESETS, saved.preset) || saved.preset === 'custom') cfg.preset = saved.preset;
       if (Array.isArray(saved.customColors) && saved.customColors.length === 4) cfg.customColors = saved.customColors.map((color,i) => /^#[0-9a-f]{6}$/i.test(color) ? color.toLowerCase() : DEFAULTS.customColors[i]);
@@ -164,14 +276,18 @@ select option{background:#f6f8fb;color:#222a3b}:host([data-dark]) select option{
   let disposed = false;
   let timer;
   let observer;
+  let composerObserver;
+  let observedComposer;
   let style;
   let ui;
   let dialog;
   let launcher;
   let shadow;
   let backdrop;
+  let water;
   let optics;
   const marked = new Set();
+  const sessionMarked = new Set();
   const listeners = new AbortController();
 
   function dispose({ handoff = false } = {}) {
@@ -179,14 +295,18 @@ select option{background:#f6f8fb;color:#222a3b}:host([data-dark]) select option{
     disposed = true;
     clearTimeout(timer);
     observer?.disconnect();
+    composerObserver?.disconnect();
     optics?.dispose();
+    water?.dispose();
     backdrop?.remove();
     listeners.abort();
     if (!handoff) window[STARTUP]?.finish();
     if (dialog?.open) dialog.close();
     for (const node of marked) node.removeAttribute(SURFACE_ATTR);
+    for (const node of sessionMarked) for (const attr of ['data-conversation-content','data-conversation-header-leading','data-conversation-tabs','data-conversation-region','data-chat-flow-kind']) node.removeAttribute(attr);
     marked.clear();
-    for (const attr of [BODY_ATTR, FLUID_ATTR, 'data-dsh-glass-motion']) document.body?.removeAttribute(attr);
+    sessionMarked.clear();
+    for (const attr of [BODY_ATTR, FLUID_ATTR, 'data-dsh-glass-motion', 'data-dsh-session-design']) document.body?.removeAttribute(attr);
     style?.remove();
     ui?.remove();
     if (window[RUNTIME]?.dispose === dispose) delete window[RUNTIME];
@@ -225,6 +345,11 @@ select option{background:#f6f8fb;color:#222a3b}:host([data-dark]) select option{
     document.body.toggleAttribute(BODY_ATTR, config.enabled);
     document.body.toggleAttribute(FLUID_ATTR, config.fluid);
     document.body.toggleAttribute('data-dsh-glass-motion', config.motion && config.fluid && config.amount > 0);
+    document.body.toggleAttribute('data-dsh-session-design', config.sessionDesign);
+    if (!config.sessionDesign) {
+      for (const node of sessionMarked) for (const attr of ['data-conversation-content','data-conversation-header-leading','data-conversation-tabs','data-conversation-region','data-chat-flow-kind']) node.removeAttribute(attr);
+      sessionMarked.clear();
+    }
     backdrop.dataset.flow = config.flow;
     style.textContent = `body[${BODY_ATTR}]{--dsh-lg-blur:${config.blur}px;--dsh-lg-sat:${config.saturate}%;${tokens(LIGHT_TOKENS)}}
 body[data-ds-dark-theme][${BODY_ATTR}]{${tokens(DARK_TOKENS)}}
@@ -236,13 +361,16 @@ body[data-ds-dark-theme][${FLUID_ATTR}]{${colorRules(true)}}` + CSS;
     }
     syncUi();
     optics?.sync([...marked], config);
+    water?.sync(config);
     schedule();
   }
   function syncUi() {
     if (!shadow) return;
     ui.toggleAttribute('data-dark', document.body.hasAttribute('data-ds-dark-theme'));
+    ui.toggleAttribute('data-session-design', config.sessionDesign);
     window[STARTUP]?.updateTheme(document.body.hasAttribute('data-ds-dark-theme'));
     launcher.toggleAttribute('data-active', config.enabled || config.fluid);
+    positionLauncher();
     for (const input of shadow.querySelectorAll('[data-field]')) {
       const key = input.dataset.field;
       if (input.type === 'checkbox') input.checked = config[key];
@@ -256,9 +384,80 @@ body[data-ds-dark-theme][${FLUID_ATTR}]{${colorRules(true)}}` + CSS;
     for (const input of shadow.querySelectorAll('[data-color]')) if (shadow.activeElement !== input) input.value = colors[Number(input.dataset.color)];
     for (const swatch of shadow.querySelectorAll('[data-preset]')) swatch.setAttribute('aria-pressed',String(swatch.dataset.preset === config.preset));
   }
+  function positionLauncher() {
+    if (!ui || !launcher) return;
+    const composer = config.sessionDesign ? document.querySelector('[data-conversation-region="composer"]') : null;
+    if (composer !== observedComposer) {
+      composerObserver?.disconnect(); composerObserver = undefined; observedComposer = composer;
+      if (composer && typeof ResizeObserver !== 'undefined') {
+        composerObserver = new ResizeObserver(positionLauncher);
+        composerObserver.observe(composer);
+      }
+    }
+    if (!composer) { ui.style.removeProperty('bottom'); return; }
+    const button = launcher.getBoundingClientRect(), seat = composer.getBoundingClientRect();
+    const overlap = button.bottom > seat.top - 8 && button.top < seat.bottom + 8 && button.right > seat.left && button.left < seat.right;
+    ui.style.bottom = overlap ? `${Math.max(180, innerHeight - seat.top + button.height + 16)}px` : '';
+  }
+  function tagSession(node, attr, value = '') {
+    if (node.getAttribute(attr) === value) return;
+    node.setAttribute(attr, value);
+    sessionMarked.add(node);
+  }
+  function discoverSession() {
+    if (!config.sessionDesign) return;
+    const editor = document.querySelector('[contenteditable="true"],[role="textbox"],textarea');
+    if (!editor) return;
+    const viewport = innerWidth * innerHeight;
+    let composer;
+    let scrollRegion;
+    let current = editor;
+    for (let depth = 0; current?.parentElement && depth < 9; depth++) {
+      current = current.parentElement;
+      const rect = current.getBoundingClientRect();
+      if (!composer && rect.width >= Math.min(240, innerWidth * .32) && rect.height >= 64 && rect.height <= Math.min(280, innerHeight * .42)) composer = current;
+      if (composer) break;
+    }
+    const composerRect = composer?.getBoundingClientRect();
+    if (composerRect) for (const candidate of document.querySelectorAll('main,section,div')) {
+      if (candidate.contains(editor) || candidate.contains(composer)) continue;
+      const rect = candidate.getBoundingClientRect();
+      const overflow = getComputedStyle(candidate).overflowY;
+      if (rect.width < 180 || rect.height < innerHeight * .24 || rect.width * rect.height < viewport * .04 || rect.top >= composerRect.top || !/auto|scroll|overlay/.test(overflow)) continue;
+      if (!candidate.innerText?.trim()) continue;
+      if (!scrollRegion || rect.width * rect.height < scrollRegion.getBoundingClientRect().width * scrollRegion.getBoundingClientRect().height) scrollRegion = candidate;
+    }
+    if (composer) {
+      tagSession(composer, 'data-conversation-region', 'composer');
+      const content = composer.parentElement?.parentElement;
+      if (content) tagSession(content, 'data-conversation-content');
+    }
+    if (scrollRegion) {
+      tagSession(scrollRegion, 'data-conversation-region', 'chat');
+      const section = scrollRegion.parentElement;
+      const tablist = section?.querySelector('[role="tablist"]') || document.querySelector('[role="tablist"]');
+      if (tablist) tagSession(tablist, 'data-conversation-tabs');
+      const heading = section?.querySelector('header,[role="heading"],[class*="head"],[class*="Head"],[class*="identity"],[class*="title"]') || document.querySelector('header,[role="heading"],[class*="head"],[class*="Head"],[class*="identity"],[class*="title"]');
+      if (heading) tagSession(heading, 'data-conversation-header-leading');
+      const bounds = scrollRegion.getBoundingClientRect();
+      for (const candidate of scrollRegion.querySelectorAll('article, [role="article"], div')) {
+        const rect = candidate.getBoundingClientRect();
+        const text = candidate.innerText?.trim();
+        if (!text || text.length > 1200 || rect.width < 56 || rect.height < 28 || rect.width > bounds.width * .84) continue;
+        if (rect.left + rect.width / 2 < bounds.left + bounds.width * .54) continue;
+        const style = getComputedStyle(candidate);
+        const color = /^rgba?\(([^)]+)\)$/.exec(style.backgroundColor);
+        const alpha = color ? Number(color[1].split(/[\s,\/]+/)[3] ?? 1) : 0;
+        if ((alpha > .02 && alpha < .995 || style.backgroundImage !== 'none') && Number.parseFloat(style.borderTopLeftRadius) >= 8) tagSession(candidate, 'data-chat-flow-kind', 'user');
+      }
+    }
+  }
   function scan() {
     timer = undefined;
-    if (!config.enabled || !document.body) return;
+    if (!document.body || (!config.enabled && !config.sessionDesign)) return;
+    if (config.sessionDesign) discoverSession();
+    if (!config.enabled) return;
+    discoverSession();
     for (const node of marked) if (!node.isConnected) marked.delete(node);
     // ponytail: bound one scan to 1,600 nodes / 100 surfaces; expand only if real layouts need it.
     const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_ELEMENT, {
@@ -284,7 +483,7 @@ body[data-ds-dark-theme][${FLUID_ATTR}]{${colorRules(true)}}` + CSS;
     optics?.sync([...marked], config);
   }
   function schedule() {
-    if (!disposed && !timer && config.enabled) timer = setTimeout(guard(scan), 240);
+    if (!disposed && !timer && (config.enabled || config.sessionDesign)) timer = setTimeout(guard(scan), 240);
   }
   function start() {
     style = document.createElement('style');
@@ -295,7 +494,12 @@ body[data-ds-dark-theme][${FLUID_ATTR}]{${colorRules(true)}}` + CSS;
     backdrop.dataset.dshGlassOwned = '';
     backdrop.setAttribute('aria-hidden','true');
     backdrop.innerHTML = '<div class="dsh-lg-blob"></div>'.repeat(4);
+    const rippleCanvas = document.createElement('canvas');
+    rippleCanvas.id = 'dsh-liquid-glass-ripple';
+    rippleCanvas.setAttribute('aria-hidden','true');
+    backdrop.append(rippleCanvas);
     document.body.prepend(backdrop);
+    water = createWaterSurface(rippleCanvas, backdrop);
     try { optics = createGlassOptics(); }
     catch (error) { console.warn('[dsh-liquid-glass] Optical filter unavailable; blur remains active.', error); }
     ui = document.createElement('div');
@@ -308,14 +512,15 @@ body[data-ds-dark-theme][${FLUID_ATTR}]{${colorRules(true)}}` + CSS;
 <button class="launcher" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="glass-settings"><span class="dot" aria-hidden="true"></span>${T.title}</button>
 <dialog id="glass-settings" aria-labelledby="glass-title" aria-describedby="glass-subtitle">
 <header><div><h2 id="glass-title">${T.title}</h2><p id="glass-subtitle">${T.subtitle}</p></div><button class="close" type="button" aria-label="${T.close}">×</button></header>
-<div class="tabs" role="tablist" aria-label="${T.title}">${['background','material','boot'].map((key,i)=>`<button type="button" role="tab" data-tab="${key}" id="tab-${key}" aria-controls="pane-${key}" aria-selected="${i===0}" tabindex="${i===0?0:-1}">${T[key]}</button>`).join('')}</div>
-<section class="pane" id="pane-background" role="tabpanel" aria-labelledby="tab-background">${toggle('fluid')}${toggle('motion')}
+<div class="tabs" role="tablist" aria-label="${T.title}">${['background','material','conversation','boot'].map((key,i)=>`<button type="button" role="tab" data-tab="${key}" id="tab-${key}" aria-controls="pane-${key}" aria-selected="${i===0}" tabindex="${i===0?0:-1}">${key==='conversation'?T.sessionTab:T[key]}</button>`).join('')}</div>
+    <section class="pane" id="pane-background" role="tabpanel" aria-labelledby="tab-background">${toggle('fluid')}${toggle('motion')}${toggle('ripple')}${range('rippleStrength',10,100)}
 <label class="row"><span>${T.preset}</span><select data-field="preset">${Object.keys(PRESETS).map((key, i) => `<option value="${key}">${T.presets[i]}</option>`).join('')}<option value="custom">${T.custom}</option></select></label>
 <div class="swatches">${Object.entries(PRESETS).map(([key,colors],i)=>`<button type="button" class="swatch" data-preset="${key}" aria-label="${T.presets[i]}" title="${T.presets[i]}" aria-pressed="false" style="--palette:linear-gradient(135deg,${colors.join(',')})"></button>`).join('')}</div>
 <div class="palette-title">${T.palette}</div><div class="palette">${[0,1,2,3].map(i=>`<label class="color-card"><span>${T.color} ${i+1}</span><input type="color" data-color="${i}" aria-label="${T.color} ${i+1}"><input type="text" data-color="${i}" aria-label="HEX ${i+1}" maxlength="7" spellcheck="false"></label>`).join('')}</div>
 <label class="row" style="margin-top:14px"><span>${T.flow}</span><select data-field="flow">${FLOWS.map((key,i)=>`<option value="${key}">${T.flows[i]}</option>`).join('')}</select></label>
 ${range('speed',10,300)}${range('amount',0,100)}${range('depth',0,100)}${range('colorSaturation',0,180)}</section>
 <section class="pane" id="pane-material" role="tabpanel" aria-labelledby="tab-material" hidden>${toggle('enabled')}${range('refraction',0,50)}${range('shine',0,100)}${toggle('interactive')}${range('blur',0,40)}${range('saturate',100,220)}${range('alpha',10,100)}<p class="hint">${T.opticalHint}</p></section>
+<section class="pane" id="pane-conversation" role="tabpanel" aria-labelledby="tab-conversation" hidden>${toggle('sessionDesign')}<p class="hint">${zh?'独立调整标题、消息留白与输入区材质；不改变会话内容与操作。':'Restyles the session header, transcript spacing and composer while preserving host behavior.'}</p></section>
 <section class="pane" id="pane-boot" role="tabpanel" aria-labelledby="tab-boot" hidden>${toggle('startup')}<button class="replay" type="button">${T.replay}</button></section>
 <div class="footer"><p class="hint">${T.hint}</p><button class="reset" type="button">${T.reset}</button></div></dialog>`;
     dialog = shadow.querySelector('dialog');
@@ -370,11 +575,11 @@ ${range('speed',10,300)}${range('amount',0,100)}${range('depth',0,100)}${range('
         // Ignore streamed text and our own style rewrites.
         if (record.type === 'childList' && record.target !== style && [...record.addedNodes].some((n) => n.nodeType === 1 && n !== ui && !n.closest('[data-dsh-glass-owned]'))) added = true;
       }
-      if (added) schedule();
+      if (added) { positionLauncher(); schedule(); }
     }));
     observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['data-ds-dark-theme'] });
-    listen(window, 'resize', schedule);
-    listen(window, 'scroll', schedule);
+    listen(window, 'resize', () => { positionLauncher(); schedule(); });
+    listen(window, 'scroll', () => { positionLauncher(); schedule(); });
     listen(document,'pointermove',event=>optics?.move(event));
     const accessibilityMedia = matchMedia('(prefers-reduced-transparency: reduce), (forced-colors: active)');
     listen(accessibilityMedia,'change',()=>optics?.sync([...marked],config));

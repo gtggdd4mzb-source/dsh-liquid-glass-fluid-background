@@ -2,19 +2,21 @@
 
 A maintained compatibility fork of [Ink-bai5844/dsh-liquid-glass-fluid-background](https://github.com/Ink-bai5844/dsh-liquid-glass-fluid-background), with the original MIT license preserved. Maintained by **gtggdd4mzb-source**. [中文说明](README.zh.md)
 
-Version **0.5.0** targets **DeepSeek Harness 0.2.2-rc.5** (Desktop and Web). It adds rounded-edge SVG backdrop refraction, an adjustable four-color flowing background and a whale startup animation. Refraction is a browser approximation, not Apple's proprietary iOS renderer or physical ray tracing; background motion is procedural CSS animation, not a fluid simulation.
+Version **0.6.1** targets **DeepSeek Harness 0.2.2-rc.5** (Desktop and Web). It adds a damped 2D finite-difference water surface activated by blank-background clicks, adjustable ripple strength, and an iOS-inspired skin for DSH's session header, transcript and composer. Blank transcript space is interactive, while message editors and controls keep their normal behavior. The existing palette studio, moving color field, rounded-edge SVG refraction and whale startup animation remain available. Water waves are numerically simulated and shaded from their surface normals; the effect is a bounded browser approximation, not physical light transport or Apple's private renderer.
 
 ![DSH 0.2.2-rc.5 running the skin](assets/dsh-home.png)
 ![Settings on the real DSH frontend](assets/dsh-settings.png)
 
 These screenshots show the actual DSH 0.2.2-rc.5 Web frontend started from the installed Desktop bundle in a clean isolated profile. The additional `preview-light.png` / `preview-dark.png` images show the included test fixture, not the host application.
 
+The session-style screenshots and interactive preview use DSH 0.2.2-rc.5's actual semantic DOM markers with synthetic test messages; they are explicitly not captures of the Harness application.
+
 ## Install
 
 In the native Desktop app, install the release tarball from the Plugins page (the desktop profile is managed by Electron). In a Web profile, use the current Harness CLI:
 
 ```sh
-dsh plugin --profile web add https://github.com/gtggdd4mzb-source/dsh-liquid-glass-fluid-background/releases/download/v0.5.0/dsh-liquid-glass-fluid-background-0.5.0.tgz
+dsh plugin --profile web add https://github.com/gtggdd4mzb-source/dsh-liquid-glass-fluid-background/releases/download/v0.6.1/dsh-liquid-glass-fluid-background-0.6.1.tgz
 ```
 
 Fully restart Harness after the first installation. Open the **Liquid Glass** capsule near the lower-right corner.
@@ -30,6 +32,8 @@ The package name and `ui-theme-liquid-glass` row intentionally match the origina
 - Soft drift, Waves, Orbit and Aurora flows. Speed 0.10–3.00×, amplitude 0–100%, color depth 0–100%, color richness 0–180%. Motion off or zero amplitude pauses the layers; dark mode maps the chosen colors into darker tones.
 - Edge refraction 0–50 px, highlight intensity and pointer-following highlights. Rounded-edge displacement bends backdrop pixels while foreground text stays unfiltered. Try 3–8 px blur for clearer glass.
 - Blur 0–40 px, saturation 100–220%, and surface opacity 10–100%.
+- Background clicks inject impulses into a bounded damped 2D wave grid. Waves propagate, overlap, and dissipate; strength is adjustable. Input controls, links, buttons and the transcript are excluded from ripple input.
+- The Conversation tab enables a separate iOS-inspired host skin for the session header, view tabs, user turns, transcript spacing and glass composer. Host editing, attachments and message actions stay in place. The plugin launcher moves clear of the composer when they overlap.
 - Separate animation switch; system reduced-motion preferences take priority.
 - An optional startup animation: a layered ice-blue whale rises above a luminous waterline with reflection, ripples and a highlight sweep. It runs for about 2.8 seconds once per page boot, including a full app launch or page reload, then reveals the application. Plugin reloads do not replay it. The animation begins when the plugin can draw, not before Electron creates its window.
 - Turn **Whale startup animation** off for future launches, or use **Replay startup** to preview it. Click the overlay/Skip or press a key to dismiss it. Reduced motion and forced colors skip autoplay; an explicit replay shows a brief static reveal. The visual overlay never gates host readiness, and a hard timeout removes it even if CSS animation fails.
@@ -75,7 +79,7 @@ npm run test:studio
 npm pack
 ```
 
-`src/client.js` owns the skin; `src/startup.js` owns the optional startup visual. The build embeds the bundled whale vector into both delivery formats, without runtime asset requests. `npm run build` writes a classic inline payload and a lifecycle entry wrapped in DSH's `window.__ModuleLoader__.load` format; no transpiler or runtime dependencies are needed. Generated `lib/` files are committed so GitHub-source installation works without build scripts. Browser tests use a clearly labeled fixture, not an authenticated user session. `PLAYWRIGHT_CHANNEL=msedge` optionally selects installed Edge.
+`src/client.js` owns the skin and bounded wave solver; `src/startup.js` owns the optional startup visual. The build embeds the bundled whale vector into both delivery formats, without runtime asset requests. `npm run build` writes a classic inline payload and a lifecycle entry wrapped in DSH's `window.__ModuleLoader__.load` format; no transpiler or runtime dependencies are needed. Generated `lib/` files are committed so GitHub-source installation works without build scripts. Browser checks use host-shaped semantic markup, not an authenticated conversation. `PLAYWRIGHT_CHANNEL=msedge` optionally selects installed Edge.
 
 Release validation also exercised the Cordis 4.1.0 event scope and the actual `renderIndexInjections` implementation extracted from DSH Desktop 0.2.2-rc.5. See [compatibility evidence](COMPATIBILITY.md) for the limits of that validation.
 

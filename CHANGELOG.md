@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.6.1 — 2026-11-26
+
+- Let blank clicks in the conversation transcript create water ripples; keep editor, buttons, links and composer controls excluded.
+- Discover the real DSH session layout without fixture-only markers, and keep the session skin independently switchable.
+- Test session discovery and click behavior against a host-shaped DOM with no plugin-owned annotations.
+
+## 0.6.0 — 2026-11-26
+
+- Add a bounded, damped 2D finite-difference water surface; blank-background clicks inject live impulses whose waves propagate and combine.
+- Shade the evolving height field from its surface normals, with adjustable impulse strength, canvas cleanup, resize handling and no pointer interception.
+- Add an iOS-inspired DSH conversation skin for the host's stable header, tab, user-turn, transcript and composer markers; preserve the host's editing and message behavior.
+- Move the settings launcher above the composer when their visible bounds overlap.
+- Add real-host-shape browser checks and light/dark desktop/mobile session previews.
+
 ## 0.5.0 — 2026-11-26
 
 - Add Background / Glass / Startup tabs with arrow-key navigation.

@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DSH 会话界面预览</title>
+<style>
+:root{font:14px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif;color:#25313d;background:#f2f6f7}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:#eff4f5}.session{height:100vh;min-height:640px;display:flex;flex-direction:column;max-width:1440px;margin:auto}.head{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 34px 12px}.identity{display:flex;align-items:center;gap:12px;min-height:40px}.glyph{display:grid;place-items:center;width:34px;height:34px;border-radius:12px;background:linear-gradient(145deg,#cce9e4,#dae2f6);color:#447d7c;font-weight:700}.identity b{font-size:14px;font-weight:600}.meta{color:#839098;font-size:12px}.actions{display:flex;gap:8px}.icon{width:34px;height:34px;border:1px solid #fff;background:#ffffff96;border-radius:12px;color:#56626a}.tabs{display:flex;gap:7px;padding:0 34px 14px;border-bottom:1px solid #ffffffa8}.tabs button{border:0;background:transparent;color:#75848b;padding:7px 13px;border-radius:10px}.tabs button[aria-selected=true]{background:#ffffffa8;color:#26363d;box-shadow:0 2px 8px #2d43470c}.chat{flex:1;min-height:0;overflow:auto;padding:40px 28px 120px}.flow{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:30px}.assistant{display:grid;grid-template-columns:32px minmax(0,1fr);gap:14px;max-width:690px}.avatar{display:grid;place-items:center;width:30px;height:30px;border-radius:11px;background:#e2efed;color:#548988;font-weight:650}.speaker{font-size:12px;color:#88959b}.message{margin-top:5px;color:#29363d;font-size:15px;line-height:1.8}.user{align-self:flex-end;max-width:78%;padding:12px 16px;border:1px solid #ffffffbd;border-radius:20px 20px 6px 20px;background:linear-gradient(145deg,#e7f3f1dc,#eaf0f9dd);box-shadow:0 6px 20px #27444b0c;color:#2c3c43}.tags{display:flex;gap:8px;margin-top:13px}.tags span{padding:3px 9px;border-radius:99px;background:#e3eeee;color:#648381;font-size:11px}.seat{width:min(850px,calc(100% - 48px));margin:auto auto 20px;padding:12px 16px 10px;border:1px solid #ffffffc9;border-radius:25px;background:#ffffffa8;backdrop-filter:blur(24px) saturate(155%);box-shadow:0 14px 42px #14252e18,inset 0 1px 0 #ffffffc8}.draft{min-height:38px;padding:4px 5px;color:#75838a}.tools{display:flex;justify-content:space-between;align-items:center}.toolgroup{display:flex;gap:8px}.tool{width:32px;height:32px;border:0;border-radius:11px;background:#ffffff80;color:#74828a}.send{width:34px;height:34px;border:0;border-radius:12px;background:#6d9da0;color:white;font-size:19px}.footnote{padding:0 16px 10px;text-align:center;color:#829096;font-size:11px}
+@media(max-width:600px){.head{padding:14px 17px 10px}.tabs{padding-inline:17px}.chat{padding:28px 16px 100px}.user{max-width:90%}.seat{width:calc(100% - 24px);margin-bottom:12px}.session{min-height:560px}}
+</style>
+</head>
+<body><main class="session">
+<header class="head"><div class="identity"><span class="glyph">D</span><span><b>灵感工作室</b><span class="meta"> · 今天 14:32</span></span></div><div class="actions"><button class="icon" aria-label="更多会话操作">•••</button></div></header>
+<nav class="tabs" role="tablist"><button role="tab" aria-selected="true">对话</button><button role="tab" aria-selected="false">任务</button><button role="tab" aria-selected="false">文件</button></nav>
+<section class="chat"><div class="flow">
+<article class="assistant"><span class="avatar">D</span><div><div class="speaker">DeepSeek</div><div class="message">今天想把工作空间整理得更轻盈一些。我们可以从背景和对话阅读体验开始。</div></div></article>
+<article class="user">帮我设计一套安静、清晰的会话界面，也让背景有一点水面的呼吸感。</article>
+<article class="assistant"><span class="avatar">D</span><div><div class="speaker">DeepSeek</div><div class="message">把消息留在清晰的阅读层，让柔和的色彩和细微波纹退到后面。需要展开的操作和上下文，仍保持在原来的位置。</div><div class="tags"><span>轻盈</span><span>清晰</span><span>自然</span></div></div></article>
+</div></section>
+<div class="seat"><div class="draft" contenteditable="true" role="textbox" aria-label="输入消息">继续对话…</div><div class="tools"><div class="toolgroup"><button class="tool" aria-label="添加附件">＋</button><button class="tool" aria-label="选择模式">◉</button></div><button class="send" aria-label="发送消息">↑</button></div></div>
+<div class="footnote">会话界面独立预览 · 点击空白处可查看实时水面涟漪</div>
+</main></body></html>

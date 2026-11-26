@@ -1,6 +1,6 @@
 # Compatibility evidence
 
-Validation date: 2026-11-26. Current plugin: **0.5.0**. Target: installed **DeepSeek Harness Desktop 0.2.2-rc.5**, containing **@deepseek-ai/dsh 0.2.2-rc.5** and **@deepseek-ai/cordis 4.1.0**. The unrelated global CLI was 0.1.2-rc.1 and was not used as the target.
+Validation date: 2026-11-26. Current plugin: **0.6.0**. Target: installed **DeepSeek Harness Desktop 0.2.2-rc.5**, containing **@deepseek-ai/dsh 0.2.2-rc.5** and **@deepseek-ai/cordis 4.1.0**. The unrelated global CLI was 0.1.2-rc.1 and was not used as the target.
 
 Verified:
 
@@ -14,5 +14,7 @@ Verified:
 - Light/dark fixture previews were inspected visually. They are labeled as fixtures, not application screenshots.
 - Startup browser checks: seven scenarios cover early/client handoff without duplicate overlays, hard timeout with paused CSS animations, no repeat on plugin remount, persistent startup toggle, replay, Escape/Skip, live dark-theme adoption, scope disposal, reduced-motion autoplay suppression/static replay, and failure isolation. Light/dark startup screenshots were visually inspected.
 - Native Windows 0.5.0: the installed client hash matched the built file. Relaunched the actual Desktop application, inspected the startup toggle and replay button, replayed the whale animation on screen, and confirmed it automatically returned to the working application. The user's existing glass preferences were preserved.
+- 0.6.0 session-design correction: the browser fixture no longer contains plugin-owned conversation markers. The client now discovers the real editor, composer, scrollable transcript, header, tabs and right-aligned user bubbles in the host DOM; the session skin remains independent of the glass master switch and removes only its own markers when disabled.
+- Native Windows 0.6.0: the existing Desktop process (0.2.2-rc.5) loaded the session settings and already-installed 0.6.0. The live conversation DOM exposed none of the fixture's `data-conversation-*` markers, confirming why the prior session skin was incomplete. Clicking empty transcript space produced a visible ripple in the actual Harness window. The new DOM discovery implementation still requires a fresh real-window check after reinstall.
 
 Scope: this evidence verifies clean installation, real-host Web startup, native Windows Desktop display, plugin management and browser behavior. It does not claim a tour of every authenticated DSH screen or compatibility with every other installed theme, future Harness version, operating system or browser. Surface detection intentionally has a bounded budget and may leave unmatched regions unstyled.
