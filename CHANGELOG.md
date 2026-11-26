@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.5.0 — 2026-11-26
+
+- Add Background / Glass / Startup tabs with arrow-key navigation.
+- Add four moving color layers, four flow styles, 0.10–3.00× speed, amplitude, color depth and richness.
+- Add six palette swatches, four color pickers and HEX inputs; preserve custom palettes across reloads.
+- Add rounded-edge SVG backdrop displacement with adjustable strength and pointer highlights; foreground text is unfiltered.
+- Bound optical rendering to eight visible material surfaces; restore owned styles, filters and observers on cleanup.
+- Verify refraction-only grid pixel changes and exact restoration, invalid saved colors, accessibility and persistence.
+- Exercise speed, water flow, custom HEX and low-blur glass on native Windows DSH without exiting running tasks.
+
 ## 0.4.0 — 2026-11-26
 
 - Add an optional whale-surfacing startup visual: layered ice-blue vector, perspective rise, specular sweep, waterline, reflection, ripples and droplets, then a fade to the application.

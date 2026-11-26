@@ -1,7 +1,7 @@
 {
   "name": "dsh-liquid-glass-fluid-background",
-  "version": "0.4.0",
-  "description": "Liquid-glass surfaces and an independently configurable animated gradient background for DeepSeek Harness.",
+  "version": "0.5.0",
+  "description": "Glass backdrop refraction, a four-color flow studio and whale startup animation for DeepSeek Harness.",
   "type": "module",
   "license": "MIT",
   "author": "Ink-bai5844",
@@ -26,6 +26,7 @@
     "test": "node --test test/*.test.mjs",
     "test:browser": "node test/browser.mjs",
     "test:startup": "node test/startup.mjs",
+    "test:studio": "node test/studio.mjs",
     "check": "npm run build && npm test",
     "prepack": "npm run check"
   },

@@ -30,7 +30,11 @@ page.on('console', (message) => { if (message.type() === 'warning' && message.te
 let passed = 0;
 function ok(name) { passed++; console.log('PASS ' + name); }
 const ui = page.locator('#dsh-liquid-glass-ui');
-const field = (key) => ui.locator(`[data-field="${key}"]`);
+const field = key => Object.fromEntries(['fill','selectOption','check','uncheck','inputValue','isChecked'].map(method => [method, async (...args) => {
+  const tab = ['enabled','refraction','shine','interactive','blur','saturate','alpha'].includes(key) ? 'material' : key==='startup' ? 'boot' : 'background';
+  await ui.locator(`[data-tab="${tab}"]`).click();
+  return ui.locator(`[data-field="${key}"]`)[method](...args);
+}]));
 try {
   const url = `http://127.0.0.1:${server.address().port}`;
   await page.goto(url);
@@ -147,6 +151,7 @@ try {
   await privatePage.goto(url);
   await privatePage.locator('#dsh-liquid-glass-ui').waitFor();
   await privatePage.locator('#dsh-liquid-glass-ui .launcher').click();
+  await privatePage.locator('#dsh-liquid-glass-ui [data-tab="material"]').click();
   await privatePage.locator('#dsh-liquid-glass-ui [data-field="blur"]').fill('20');
   await privatePage.close();
   ok('blocked localStorage still allows session-only use');

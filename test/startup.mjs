@@ -56,6 +56,7 @@ try {
 
   const ui = p.locator('#dsh-liquid-glass-ui');
   await ui.locator('.launcher').click();
+  await ui.locator('[data-tab="boot"]').click();
   await ui.locator('.replay').click();
   await splash.waitFor();
   await p.keyboard.press('Escape');
@@ -65,6 +66,7 @@ try {
   await p.reload();
   assert.equal(await splash.count(), 0);
   await ui.locator('.launcher').click();
+  await ui.locator('[data-tab="boot"]').click();
   await ui.locator('.replay').click();
   await splash.waitFor();
   await splash.locator('.skip').click();
@@ -85,6 +87,7 @@ try {
   const reduced = await page({ reduced: true });
   assert.equal(await reduced.locator('#' + root).count(), 0);
   await reduced.locator('#dsh-liquid-glass-ui .launcher').click();
+  await reduced.locator('#dsh-liquid-glass-ui [data-tab="boot"]').click();
   await reduced.locator('#dsh-liquid-glass-ui .replay').click();
   await reduced.locator('#' + root).waitFor();
   assert.equal(await reduced.locator('#' + root).getAttribute('data-reduced'), '');

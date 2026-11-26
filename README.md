@@ -2,7 +2,7 @@
 
 A maintained compatibility fork of [Ink-bai5844/dsh-liquid-glass-fluid-background](https://github.com/Ink-bai5844/dsh-liquid-glass-fluid-background), with the original MIT license preserved. Maintained by **gtggdd4mzb-source**. [中文说明](README.zh.md)
 
-Version **0.4.0** targets **DeepSeek Harness 0.2.2-rc.5** (Desktop and Web). It adds translucent surfaces, a CSS gradient background, and a whale surfacing startup animation. It does not implement optical refraction or a WebGL fluid simulation.
+Version **0.5.0** targets **DeepSeek Harness 0.2.2-rc.5** (Desktop and Web). It adds rounded-edge SVG backdrop refraction, an adjustable four-color flowing background and a whale startup animation. Refraction is a browser approximation, not Apple's proprietary iOS renderer or physical ray tracing; background motion is procedural CSS animation, not a fluid simulation.
 
 ![DSH 0.2.2-rc.5 running the skin](assets/dsh-home.png)
 ![Settings on the real DSH frontend](assets/dsh-settings.png)
@@ -14,7 +14,7 @@ These screenshots show the actual DSH 0.2.2-rc.5 Web frontend started from the i
 In the native Desktop app, install the release tarball from the Plugins page (the desktop profile is managed by Electron). In a Web profile, use the current Harness CLI:
 
 ```sh
-dsh plugin --profile web add https://github.com/gtggdd4mzb-source/dsh-liquid-glass-fluid-background/releases/download/v0.4.0/dsh-liquid-glass-fluid-background-0.4.0.tgz
+dsh plugin --profile web add https://github.com/gtggdd4mzb-source/dsh-liquid-glass-fluid-background/releases/download/v0.5.0/dsh-liquid-glass-fluid-background-0.5.0.tgz
 ```
 
 Fully restart Harness after the first installation. Open the **Liquid Glass** capsule near the lower-right corner.
@@ -25,6 +25,10 @@ The package name and `ui-theme-liquid-glass` row intentionally match the origina
 
 - Glass surfaces and gradient background can be enabled independently.
 - Six palettes: Isolation, Aurora, Sunset, Violet, Ocean and Silver.
+- Background / Glass / Startup tabs, with arrow-key navigation.
+- Four color pickers plus HEX inputs; editing a preset creates a persistent custom palette. The fourth color also anchors the background ground color.
+- Soft drift, Waves, Orbit and Aurora flows. Speed 0.10–3.00×, amplitude 0–100%, color depth 0–100%, color richness 0–180%. Motion off or zero amplitude pauses the layers; dark mode maps the chosen colors into darker tones.
+- Edge refraction 0–50 px, highlight intensity and pointer-following highlights. Rounded-edge displacement bends backdrop pixels while foreground text stays unfiltered. Try 3–8 px blur for clearer glass.
 - Blur 0–40 px, saturation 100–220%, and surface opacity 10–100%.
 - Separate animation switch; system reduced-motion preferences take priority.
 - An optional startup animation: a layered ice-blue whale rises above a luminous waterline with reflection, ripples and a highlight sweep. It runs for about 2.8 seconds once per page boot, including a full app launch or page reload, then reveals the application. Plugin reloads do not replay it. The animation begins when the plugin can draw, not before Electron creates its window.
@@ -46,6 +50,13 @@ On scope disposal, the skin removes its styles, settings UI, surface attributes,
 
 Surface discovery is bounded to 1,600 nodes and 100 marked surfaces per scan. Text-only streaming updates do not trigger a scan. Future changes to host markup may leave some surfaces unstyled; compatibility is only declared for the tested 0.2.2 version family. The declared engine range explicitly includes the 0.2.2 prerelease tuple.
 
+Optical displacement is limited to eight visible surfaces, each no larger than 500,000 square pixels. Other surfaces keep standard blur. Maps rebuild on element resize rather than every frame; moving background layers animate transforms. Refraction zero, reduced transparency and forced colors remove optical filters and overlays. Cleanup restores the original inline positioning/styles. SVG backdrop-filter support and nested host backdrop roots can affect rendering; unsupported browsers may retain the blur fallback. This release was checked in installed Edge and native Windows DSH, not every browser or GPU.
+
+![Palette studio fixture](assets/studio-palette.png)
+![Refraction-only grid verification](assets/refraction-grid.png)
+
+These are test-fixture captures. The grid's edges visibly bend with both blur and highlight opacity set to zero, and restore exactly when the optical renderer is disposed.
+
 ## Privacy
 
 The skin makes no network requests, requests no account/API credentials, and does not read conversations, files or host settings. It only reads its own preferences, the document language, the host theme attribute, and surface geometry/computed colors.
@@ -60,6 +71,7 @@ npm run check
 npx playwright install chromium
 npm run test:browser
 npm run test:startup
+npm run test:studio
 npm pack
 ```
 

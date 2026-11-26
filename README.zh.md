@@ -2,7 +2,7 @@
 
 这是 [Ink-bai5844 原插件](https://github.com/Ink-bai5844/dsh-liquid-glass-fluid-background) 的维护分支，保留原作者署名与 MIT 许可，由 **gtggdd4mzb-source** 维护。[English](README.md)
 
-**0.4.0** 面向 **DSH 0.2.2-rc.5 桌面端和 Web 端**：提供半透明玻璃表面、CSS 渐变流体背景，以及鲸鱼浮出水面的启动动画。渐变背景不是 WebGL 流体模拟，也不包含光学折射。
+**0.5.0** 面向 **DSH 0.2.2-rc.5 桌面端和 Web 端**：新增四色调色工作台、四种可调流动背景与 SVG 背景像素折射。折射是网页端近似实现，与苹果 iOS 原生渲染器和物理光线追踪不同；背景采用 CSS 程序动画，不是流体物理模拟。
 
 ![DSH 0.2.2-rc.5 实际运行效果](assets/dsh-home.png)
 ![DSH 中的设置面板](assets/dsh-settings.png)
@@ -14,7 +14,7 @@
 桌面端请在“插件”页选择版本发布页的安装包；desktop profile 由 Electron 管理。Web 端可用当前 DSH 命令行安装：
 
 ```sh
-dsh plugin --profile web add https://github.com/gtggdd4mzb-source/dsh-liquid-glass-fluid-background/releases/download/v0.4.0/dsh-liquid-glass-fluid-background-0.4.0.tgz
+dsh plugin --profile web add https://github.com/gtggdd4mzb-source/dsh-liquid-glass-fluid-background/releases/download/v0.5.0/dsh-liquid-glass-fluid-background-0.5.0.tgz
 ```
 
 首次安装后完全退出并重启 DSH，在右下方打开“液态玻璃”。
@@ -25,6 +25,10 @@ dsh plugin --profile web add https://github.com/gtggdd4mzb-source/dsh-liquid-gla
 
 - 玻璃表面、流体背景、背景动画分别开关。
 - 隔离、极光、日落、紫雾、海洋、银灰六种配色。
+- 四色调色盘：点击色块选色，也可输入 HEX；修改任一预设颜色即转为自定义并保存，第四种颜色也作为背景底色。
+- 柔和漂移、水波流动、环绕旋流、极光漫游；速度 0.10–3.00 倍、幅度 0–100%、颜色深浅 0–100%、色彩浓度 0–180%。动画关闭或幅度为零时暂停，深色主题自动映射更暗色调。
+- “玻璃”页支持 0–50 px 边缘折射、玻璃高光与跟随指针高光。位移弯曲背景像素，不过滤表面文字。建议模糊调至 3–8 px 查看更通透的效果。
+- 设置分为“背景 / 玻璃 / 启动”三页，方向键可切换页签。
 - 模糊 0–40 px、饱和度 100–220%、表面不透明度 10–100%。
 - 跟随 DSH 浅深色；支持键盘、Escape 关闭后焦点返回、窄屏设置面板。
 - 遵循系统低动态、减少透明度和强制对比色偏好。
@@ -44,6 +48,13 @@ dsh plugin --profile web add https://github.com/gtggdd4mzb-source/dsh-liquid-gla
 停用时会清理自己的样式、面板、标记、监听器、观察器与定时器。仅消费启动注入行的部署需刷新页面或重启应用才会移除效果。保存过的个人偏好会保留；需要清空时删除上述本地存储键。
 
 每次扫描最多检查 1,600 个节点、标记 100 个表面，文字流式更新不会触发全页扫描。后续宿主布局变化可能使部分区域不再呈现玻璃效果。兼容范围限定为已验证的 0.2.2 版本族，未声称验证所有后续 DSH 版本。
+
+为限制渲染成本，最多八个可见表面使用折射，单个不超过 50 万平方像素，其余保留普通磨砂。位移贴图随尺寸变化重建，不在每帧生成；色层通过变换运动。折射调至零、减少透明度或强制对比色模式会清理光学滤镜与高光。不同浏览器的 SVG backdrop-filter 支持、宿主的嵌套背景根会影响表现；本版验证了本机 Edge 与原生 Windows DSH，未覆盖所有浏览器或显卡。
+
+![调色工作台测试预览](assets/studio-palette.png)
+![零模糊、零高光下的折射验证](assets/refraction-grid.png)
+
+以上为测试页截图。网格在模糊与高光均为零时仍在边缘弯曲，清理光学层后可逐像素恢复。
 
 插件不会访问网络、会话、文件或凭据，只读取自己的偏好、语言、宿主主题标记与表面样式。当前电脑的其他主题插件组合未作为全覆盖兼容测试；应逐个启用以排查颜色冲突。
 
