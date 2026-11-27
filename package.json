@@ -1,6 +1,6 @@
 {
   "name": "dsh-liquid-glass-fluid-background",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "description": "Interactive wave surface, an iOS-inspired DSH conversation skin, adjustable glass refraction and whale startup animation.",
   "type": "module",
   "license": "MIT",
@@ -37,7 +37,7 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "test": "node --test test/*.test.mjs",
-    "test:browser": "node test/browser.mjs",
+    "test:browser": "node test/browser.mjs && node test/native-composer.mjs",
     "test:startup": "node test/startup.mjs",
     "test:studio": "node test/studio.mjs",
     "test:session": "node test/session.mjs",

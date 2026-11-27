@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.6.2 — 2026-11-27
+
+- Style the native `data-composer-card` directly instead of choosing a wrapper by size.
+- Preserve the original input width, spacing and toolbar layout; exclude composer ancestors and descendants from glass-surface discovery.
+- Clear stale composer markers when switching conversations.
+- Add regression coverage for nested host wrappers, window sizes, tall drafts, card replacement, toggles and disposal.
+
 ## 0.6.1 — 2026-11-26
 
 - Let blank clicks in the conversation transcript create water ripples; keep editor, buttons, links and composer controls excluded.

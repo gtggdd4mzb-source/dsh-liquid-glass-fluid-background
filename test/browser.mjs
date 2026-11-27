@@ -70,7 +70,7 @@ try {
   assert.equal(await page.locator('body').getAttribute('data-dsh-session-design'), '');
   const session = await page.evaluate(() => {
     const root=document.createElement('section');root.setAttribute('data-conversation-content','');
-    root.innerHTML='<div data-conversation-header-leading>Studio</div><div data-conversation-tabs><button role="tab" aria-selected="true">Chat</button></div><div data-conversation-region="chat"><div data-chat-flow>Message</div></div><div data-conversation-region="composer"><div contenteditable="true">Draft</div></div>';
+    root.innerHTML='<div data-conversation-header-leading>Studio</div><div data-conversation-tabs><button role="tab" aria-selected="true">Chat</button></div><div data-conversation-region="chat"><div data-chat-flow>Message</div></div><div data-composer-card data-conversation-region="composer"><div contenteditable="true">Draft</div></div>';
     document.body.append(root);
     return {header:getComputedStyle(root.querySelector('[data-conversation-header-leading]')).backdropFilter,composer:getComputedStyle(root.querySelector('[data-conversation-region=composer]')).borderRadius};
   });

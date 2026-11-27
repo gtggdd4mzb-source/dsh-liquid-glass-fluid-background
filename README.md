@@ -2,21 +2,21 @@
 
 A maintained compatibility fork of [Ink-bai5844/dsh-liquid-glass-fluid-background](https://github.com/Ink-bai5844/dsh-liquid-glass-fluid-background), with the original MIT license preserved. Maintained by **gtggdd4mzb-source**. [中文说明](README.zh.md)
 
-Version **0.6.1** targets **DeepSeek Harness 0.2.2-rc.5** (Desktop and Web). It adds a damped 2D finite-difference water surface activated by blank-background clicks, adjustable ripple strength, and an iOS-inspired skin for DSH's session header, transcript and composer. Blank transcript space is interactive, while message editors and controls keep their normal behavior. The existing palette studio, moving color field, rounded-edge SVG refraction and whale startup animation remain available. Water waves are numerically simulated and shaded from their surface normals; the effect is a bounded browser approximation, not physical light transport or Apple's private renderer.
+Version **0.6.2** targets **DeepSeek Harness 0.2.2-rc.5** (Desktop and Web). This patch styles the host's native input card in place, preserves its layout and prevents glass decoration on nested composer wrappers. It keeps the damped 2D finite-difference water surface activated by blank-background clicks, adjustable ripple strength, and an iOS-inspired skin for DSH's session header, transcript and composer. Blank transcript space is interactive, while message editors and controls keep their normal behavior. The existing palette studio, moving color field, rounded-edge SVG refraction and whale startup animation remain available. Water waves are numerically simulated and shaded from their surface normals; the effect is a bounded browser approximation, not physical light transport or Apple's private renderer.
 
 ![DSH 0.2.2-rc.5 running the skin](assets/dsh-home.png)
 ![Settings on the real DSH frontend](assets/dsh-settings.png)
 
 These screenshots show the actual DSH 0.2.2-rc.5 Web frontend started from the installed Desktop bundle in a clean isolated profile. The additional `preview-light.png` / `preview-dark.png` images show the included test fixture, not the host application.
 
-The session-style screenshots and interactive preview use DSH 0.2.2-rc.5's actual semantic DOM markers with synthetic test messages; they are explicitly not captures of the Harness application.
+The session-style screenshots and interactive preview use synthetic host-shaped layouts and test messages; they are not captures of the Harness application.
 
 ## Install
 
 In the native Desktop app, install the release tarball from the Plugins page (the desktop profile is managed by Electron). In a Web profile, use the current Harness CLI:
 
 ```sh
-dsh plugin --profile web add https://github.com/gtggdd4mzb-source/dsh-liquid-glass-fluid-background/releases/download/v0.6.1/dsh-liquid-glass-fluid-background-0.6.1.tgz
+dsh plugin --profile web add https://github.com/gtggdd4mzb-source/dsh-liquid-glass-fluid-background/releases/download/v0.6.2/dsh-liquid-glass-fluid-background-0.6.2.tgz
 ```
 
 Fully restart Harness after the first installation. Open the **Liquid Glass** capsule near the lower-right corner.

@@ -2,7 +2,7 @@
 
 这是 [Ink-bai5844 原插件](https://github.com/Ink-bai5844/dsh-liquid-glass-fluid-background) 的维护分支，保留原作者署名与 MIT 许可，由 **gtggdd4mzb-source** 维护。[English](README.md)
 
-**0.6.1** 面向 **DSH 0.2.2-rc.5 桌面端和 Web 端**。修复会话消息区空白处点击不触发涟漪的问题；编辑框、按钮和链接仍保留原有交互。会话皮肤会识别真实 DSH 页面结构，不再依赖测试预览专用标记。之前版本的四色调色盘、流动背景、边缘折射和鲸鱼启动动画继续保留。折射与波纹高光均为网页端数值/绘制近似，不是 iOS 私有渲染器或光线追踪；模拟计算水面高度并按法线着色，不会改变宿主消息内容或输入逻辑。
+**0.6.2** 面向 **DSH 0.2.2-rc.5 桌面端和 Web 端**。直接修改原生输入卡片的玻璃材质，保留原有宽度与工具栏布局，修复父子容器重复装饰导致的嵌套边框；保留会话消息区空白处点击涟漪修复。编辑框、按钮和链接仍保留原有交互。会话皮肤会识别真实 DSH 页面结构，不再依赖测试预览专用标记。之前版本的四色调色盘、流动背景、边缘折射和鲸鱼启动动画继续保留。折射与波纹高光均为网页端数值/绘制近似，不是 iOS 私有渲染器或光线追踪；模拟计算水面高度并按法线着色，不会改变宿主消息内容或输入逻辑。
 
 ![液态玻璃 DSH 会话界面预览](assets/session-light.png)
 ![液态玻璃 DSH 深色会话界面预览](assets/session-dark.png)
@@ -12,14 +12,14 @@
 
 以上为桌面安装包附带的 DSH 0.2.2-rc.5 Web 前端在干净隔离 profile 中的真实截图。另附的 `preview-light.png` / `preview-dark.png` 来自测试演示页，不是宿主运行截图。
 
-会话样式的 `session-light.png` / `session-dark.png` 与交互预览 HTML 使用 DSH 0.2.2-rc.5 的真实 DOM 标记制作，但内容为测试对话，不是 Harness 截图。
+会话样式的 `session-light.png` / `session-dark.png` 与交互预览 HTML 使用模拟宿主结构与测试对话制作，不是 Harness 实际窗口截图。
 
 ## 安装
 
 桌面端请在“插件”页选择版本发布页的安装包；desktop profile 由 Electron 管理。Web 端可用当前 DSH 命令行安装：
 
 ```sh
-dsh plugin --profile web add https://github.com/gtggdd4mzb-source/dsh-liquid-glass-fluid-background/releases/download/v0.6.1/dsh-liquid-glass-fluid-background-0.6.1.tgz
+dsh plugin --profile web add https://github.com/gtggdd4mzb-source/dsh-liquid-glass-fluid-background/releases/download/v0.6.2/dsh-liquid-glass-fluid-background-0.6.2.tgz
 ```
 
 首次安装后完全退出并重启 DSH，在右下方打开“液态玻璃”。
